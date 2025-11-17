@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/icon_face_type.png?v=2">
     
     <title>AI StyleMate: Hair Style and Color Recommendation</title>
     
     <link rel="stylesheet" href="style.css"> 
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Jacques+Francois&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
@@ -17,57 +18,64 @@
 </head>
 <body>
     <header>
-        <div class="header-content-wrapper"> 
-            <div class="header-icons-left">
-                <img src="images/icon_face_type.png" alt="Face type Icon" class="header-icon">
-                <img src="images/icon_palette.png" alt="Palette Icon" class="header-icon">
-            </div>
-            <div class="header-text-group">
-                <h1>AI StyleMate</h1>
-                <p class="subtitle">Hair Style and Color Recommendation based on Face Type and Personal Tone</p>
-            </div>
-            <div class="header-icons-right">
-                <img src="images/icon_comb.png" alt="Comb Icon" class="header-icon">
-                <img src="images/icon_face_scan.png" alt="Face Scan Icon" class="header-icon">
-            </div>
+        <div class="container">
+            <h1 class="header-title">
+                <i class="fas fa-magic"></i> AI StyleMate <span class="subtitle">Beta</span>
+            </h1>
         </div>
     </header>
 
-    <div id="main-content">
+    <div id="main-content" class="container">
+        
         <section id="input-section" class="card fade-in">
             <h2><i class="fas fa-camera"></i> Input Source</h2>
             
-            <div class="mode-select-group">
-                <button id="mode-webcam" class="btn mode-btn active">Webcam Mode</button>
-                <button id="mode-upload" class="btn mode-btn">Image Upload Mode</button>
-            </div>
-
-            <div id="webcam-container">
-                <p id="initial-message">Click "Start Analysis" to load webcam.</p>
+            <div class="mode-selection button-group">
+                <button id="webcam-mode-btn" class="btn mode-btn active" onclick="switchMode('webcam')">
+                    <i class="fas fa-video"></i> Webcam
+                </button>
+                <button id="image-mode-btn" class="btn mode-btn" onclick="switchMode('image')">
+                    <i class="fas fa-image"></i> Image Upload
+                </button>
             </div>
             
-            <div id="webcam-controls" style="margin-top: 15px;">
-                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
-                <button id="screenshot-btn" class="btn secondary-btn" style="background-color: #f39c12;">📸 Take Screenshot</button>
+            <div id="webcam-container">
+                <div id="loading-indicator" style="display: none;">
+                    <i class="fas fa-sync fa-spin"></i> Initializing AI...
+                </div>
             </div>
 
-            <div id="upload-controls" style="display: none; margin-top: 15px;">
-                <input type="file" id="image-upload" accept="image/*" class="file-input">
-                <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
+            <div id="image-upload-area" style="display: none;">
+                <input type="file" id="image-upload" accept="image/*">
+                <button id="process-image-btn" class="btn primary-btn" onclick="processImage()" style="margin-top: 10px; display: none;">Analyze Image</button>
             </div>
+            
         </section>
 
         <section id="controls" class="card fade-in">
-            <h2><i class="fas fa-magic"></i> Model Selection</h2>
-            <p id="current-model-info">Active Model: **Not yet loaded**</p>
-            <div class="button-group">
-                <button id="model1-btn" class="btn model-select-btn">Face Type Analysis</button>
-                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis</button>
+            <h2><i class="fas fa-cog"></i> Controls</h2>
+
+            <div class="model-selection button-group">
+                <button id="model1-btn" class="btn secondary-btn" onclick="switchModel(1)">
+                    <i class="fas fa-user-circle"></i> Face Type Analysis
+                </button>
+                <button id="model2-btn" class="btn secondary-btn" onclick="switchModel(2)">
+                    <i class="fas fa-paint-roller"></i> Personal Tone Analysis
+                </button>
+            </div>
+
+            <div class="analysis-control">
+                <p id="current-model-info">Select a model to begin.</p>
+                <button id="analysis-btn" class="btn primary-btn" onclick="toggleAnalysis()" disabled>
+                    <i class="fas fa-play"></i> Start Analysis
+                </button>
             </div>
             
-            <div id="style-selection-controls" style="display: none;">
-                <h3><i class="fas fa-scissors"></i> Hair Style Guide</h3>
-                <p>Select a face type to view recommendations.</p>
+            <hr style="margin: 20px 0;">
+
+            <div id="face-selection-controls" style="display: none;">
+                <h3><i class="fas fa-user"></i> Face Type Guide (Manual)</h3>
+                <p>Select a face shape for manual recommendation.</p>
                 <div class="face-type-buttons button-group">
                     <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
                     <button class="btn face-select-btn" data-facetype="Round">Round</button>
@@ -78,7 +86,7 @@
             </div>
 
             <div id="tone-selection-controls" style="display: none;">
-                <h3><i class="fas fa-palette"></i> Personal Tone Guide</h3>
+                <h3><i class="fas fa-palette"></i> Personal Tone Guide (Manual)</h3>
                 <p>Select a tone to view color recommendations.</p>
                 <div class="tone-type-buttons button-group">
                     <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
