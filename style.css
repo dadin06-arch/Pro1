@@ -1,4 +1,4 @@
-/* style.css - 최종 통합 버전 (합성 버튼 및 캔버스 스타일 추가) */
+/* style.css - 최종 통합 버전 (퍼스널 톤 추천 스타일 및 이미지 크기 강제 축소 적용) */
 
 /* 변수 설정 */
 :root {
@@ -168,13 +168,6 @@ h2 .fas {
     color: var(--mode-button-active-text);
     box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
 }
-/* 💡 합성 기능 관련 스타일 추가: 비활성화 버튼 */
-.primary-btn.disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-    opacity: 0.7;
-}
 
 /* 듀얼 모드 버튼 스타일 */
 .mode-select-group {
@@ -214,8 +207,8 @@ h2 .fas {
     transform: scale(1.05);
 }
 
-/* 💡 얼굴형/톤 선택 버튼 그룹 스타일 */
-#style-selection-controls, #tone-selection-controls {
+/* 💡 얼굴형 선택 버튼 그룹 스타일 */
+#style-selection-controls {
     text-align: center;
     padding: 15px;
     border: 1px solid #ddd;
@@ -228,19 +221,15 @@ h2 .fas {
     font-size: 1.2em;
     color: #007bff; 
 }
-#tone-selection-controls h3 {
-    color: #fc5c7d;
-}
 
-
-.face-type-buttons, .tone-type-buttons {
+.face-type-buttons {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
     margin-top: 10px;
 }
-.face-select-btn, .tone-select-btn {
+.face-select-btn {
     background-color: #6c757d; 
     color: white;
     padding: 10px 15px;
@@ -255,6 +244,37 @@ h2 .fas {
 .face-select-btn.active {
     background: linear-gradient(45deg, #007bff, #0056b3); 
     box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+
+/* 💡 퍼스널 톤 선택 버튼 그룹 스타일 */
+#tone-selection-controls {
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    margin-top: 30px; 
+}
+#tone-selection-controls h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #fc5c7d; 
+}
+
+.tone-type-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+.tone-select-btn {
+    background-color: #6c757d; 
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 1em;
+    transition: background-color 0.2s, transform 0.2s;
 }
 .tone-select-btn.active {
     background: linear-gradient(45deg, #fc5c7d, #6a82fb); 
@@ -274,6 +294,14 @@ h2 .fas {
     display: block; 
     margin: 0 auto;
 }
+/* 합성 결과 이미지 스타일 (일반 이미지와 분리) */
+#webcam-container #synthesis-output-img {
+    width: 100% !important; 
+    height: auto !important;
+    max-width: 400px !important;
+    border-image: linear-gradient(to right, #FFD700, #FFA500) 1; /* 합성 시 강조 색상 */
+}
+
 
 /* 예측 결과 (퍼센트) 컨테이너 */
 #label-container {
@@ -305,11 +333,21 @@ h2 .fas {
     border-radius: 10px;
     margin-top: 20px; 
 }
+
 .recommendation-content {
     background-color: #f8f9fa; 
     padding: 20px;
     border-radius: 8px;
 }
+
+.recommendation-content h4 {
+    color: var(--primary-button-bg); 
+    font-size: 1.5em;
+    margin-top: 0;
+    border-bottom: 2px solid var(--gradient-start);
+    padding-bottom: 10px;
+}
+
 .summary-text {
     font-size: 1.1em;
     margin-bottom: 20px;
@@ -319,7 +357,7 @@ h2 .fas {
 
 
 /* ---------------------------------------------------- */
-/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) - 합성 영역 스타일 */
+/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) - 수정 */
 /* ---------------------------------------------------- */
 .hair-styles-container {
     display: flex;
@@ -327,6 +365,7 @@ h2 .fas {
     flex-wrap: wrap;
     margin-top: 15px;
 }
+
 .style-column {
     flex: 1 1 calc(50% - 10px);
     min-width: 250px;
@@ -335,52 +374,54 @@ h2 .fas {
     border-radius: 6px;
     background-color: white;
     
+    /* 🌟 수정: 수직 배치 */
     display: flex; 
-    flex-direction: column; /* 세로 배열로 변경 */
+    flex-direction: column; 
     gap: 10px; 
     align-items: center; 
 }
+
 .style-column h5 {
     color: #4CAF50; 
     margin-top: 0;
+    margin-bottom: 0;
     font-size: 1.0em; 
-    text-align: center;
-    width: 100%;
+    flex: 0 0 auto; /* 텍스트는 공간을 많이 차지하지 않도록 */
+    line-height: 1.4;
+    text-align: center; 
 }
 
-/* 💡 합성 컨테이너: 이미지(캔버스)와 버튼을 감싸는 역할 */
-.composite-wrapper {
-    display: flex;
-    flex-direction: column; /* 이미지/캔버스/버튼을 세로로 배열 */
-    align-items: center;
-    width: 100%;
-    /* 캔버스/이미지 크기가 동일하게 설정되도록 크기 지정 */
-    max-width: 250px; 
-    margin: 0 auto;
-}
-
-/* 💡 이미지 및 캔버스 공통 스타일 (합성 결과용) */
-.composite-wrapper img, 
-.composite-wrapper canvas,
-.composite-result-canvas {
-    /* 🌟 합성 결과를 잘 보여주기 위한 크기로 재정의 */
-    width: 250px !important; 
-    height: 250px !important; 
-    max-width: 250px !important;
+.style-column img {
+    /* 🌟 얼굴형 이미지 크기 강제 고정 */
+    width: 120px !important; 
+    height: 120px !important; 
+    max-width: 120px !important;
     object-fit: cover; 
     border-radius: 4px;
     border: 1px solid #ddd;
     flex-shrink: 0; 
-    margin-bottom: 10px; /* 버튼과의 간격 */
 }
 
-/* 💡 합성 버튼 스타일 */
-.composite-btn {
-    padding: 8px 15px;
+/* 🌟 합성 버튼 스타일 추가 */
+.apply-style-btn {
+    font-family: var(--font-montserrat);
+    font-weight: 700;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 5px; 
+    border-radius: 20px; 
+    cursor: pointer;
     font-size: 0.9em;
-    margin: 0; /* 기본 margin 제거 */
-    width: 100%; /* composite-wrapper 크기에 맞춤 */
-    max-width: 250px;
+    transition: all 0.3s ease;
+    background: linear-gradient(90deg, #6a82fb, #fc5c7d); 
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%; 
+    max-width: 200px;
+}
+.apply-style-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
 }
 
 
@@ -457,17 +498,10 @@ h2 .fas {
     .style-column h5 {
         text-align: center;
     }
-    /* 💡 합성 컨테이너도 반응형에 맞춰 크기 조정 */
-    .composite-wrapper img, 
-    .composite-wrapper canvas,
-    .composite-result-canvas { 
+    .style-column img {
         width: 80% !important; 
+        height: auto !important; 
         max-width: 250px !important;
-        height: auto !important;
-    }
-    .composite-btn {
-        width: 80%;
-        max-width: 250px;
     }
 
     /* 톤 추천 반응형 수정 */
