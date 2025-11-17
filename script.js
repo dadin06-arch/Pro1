@@ -1,4 +1,4 @@
-// script.js - AI StyleMate Logic (Final Version with Face Detection and Synthesis Placeholder)
+// script.js - AI StyleMate Logic (Final Version with Face Detection and Transparent Overlay Guide)
 
 // ----------------------------------------------------
 // 1. MODEL PATHS, VARIABLES & DATA DEFINITION
@@ -7,7 +7,7 @@ const URL_MODEL_1 = "./models/model_1/";
 const URL_MODEL_2 = "./models/model_2/"; 
 
 let model1, model2, webcam;
-let faceDetectorModel; // 💡 얼굴 감지 모델 변수
+let faceDetectorModel; 
 let labelContainer = document.getElementById("label-container");
 let currentModel = 0; 
 let requestID; 
@@ -15,9 +15,13 @@ let isRunning = false;
 let isInitialized = false; 
 let currentSource = 'webcam'; 
 
+// 🌟 추가된 변수: 합성 가이드 상태 추적
+let isGuideActive = false;
+let guideStyleUrl = null; 
+
 // 💡 얼굴 감지 임계값 (필요 시 조정 가능)
-const FACE_DETECTION_THRESHOLD = 0.9; // 얼굴 감지 신뢰도
-const MIN_FACE_SIZE = 50; // 최소 얼굴 크기 (픽셀)
+const FACE_DETECTION_THRESHOLD = 0.9; 
+const MIN_FACE_SIZE = 50; 
 
 // 💡 얼굴형별 추천 데이터 및 이미지 URL 정의
 const faceTypeData = {
@@ -58,7 +62,7 @@ const faceTypeData = {
     }
 };
 
-// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의 (파일명 최종 수정됨)
+// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의
 const personalToneData = {
     "Cool": {
         summary: "Blue-based and purple-based cool hues make the skin look clearer and brighter.",
@@ -136,6 +140,13 @@ function switchMode(mode) {
     
     currentSource = mode;
     
+    // 🌟 모드 변경 시 가이드 비활성화 추가
+    isGuideActive = false;
+    guideStyleUrl = null;
+    if (drawGuideOverlay.styleImage) {
+        drawGuideOverlay.styleImage = null;
+    }
+    
     document.getElementById("mode-webcam").classList.remove('active');
     document.getElementById("mode-upload").classList.remove('active');
     
@@ -192,7 +203,6 @@ async function toggleAnalysis() {
             model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
             model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
             
-            // 💡 얼굴 감지 모델 로드 추가
             faceDetectorModel = await blazeface.load();
 
             const flip = true; 
@@ -233,14 +243,60 @@ function loop() {
     if (currentSource === 'webcam') {
         webcam.update(); 
         
+        const canvas = webcam.canvas;
+        let modelToUse, modelName;
+
         if (currentModel === 1 && model1) {
-            predict(model1, "Face Type Analysis", webcam.canvas);
+            modelToUse = model1;
+            modelName = "Face Type Analysis";
         } else if (currentModel === 2 && model2) {
-            predict(model2, "Personal Tone Analysis", webcam.canvas);
+            modelToUse = model2;
+            modelName = "Personal Tone Analysis";
+        }
+        
+        if (modelToUse) {
+            predict(modelToUse, modelName, canvas);
+        }
+        
+        // 🌟 실시간 오버레이 가이드 로직 추가
+        if (isGuideActive && guideStyleUrl) {
+            drawGuideOverlay(canvas, guideStyleUrl);
         }
     }
     
     requestID = window.requestAnimationFrame(loop); 
+}
+
+// 🌟 오버레이를 그리는 새로운 함수 추가 (캔버스 투명 오버레이)
+function drawGuideOverlay(canvas, imageUrl) {
+    const ctx = canvas.getContext('2d');
+    
+    // 이전에 로드된 스타일 이미지가 없거나 URL이 바뀌었으면 로드합니다.
+    if (!drawGuideOverlay.styleImage || drawGuideOverlay.styleImage.src !== imageUrl) {
+        drawGuideOverlay.styleImage = new Image();
+        drawGuideOverlay.styleImage.crossOrigin = "Anonymous";
+        drawGuideOverlay.styleImage.onload = () => {
+            drawGuideOverlay.styleImage.isLoaded = true;
+        };
+        drawGuideOverlay.styleImage.src = imageUrl;
+        drawGuideOverlay.styleImage.isLoaded = false;
+    }
+
+    if (drawGuideOverlay.styleImage.isLoaded) {
+        ctx.save(); 
+        ctx.globalAlpha = 0.4; // 🌟 투명도 설정 (40% 투명)
+        
+        const styleImg = drawGuideOverlay.styleImage;
+        const targetWidth = canvas.width * 0.8; // 캔버스 너비의 80%
+        const targetHeight = styleImg.height * (targetWidth / styleImg.width);
+        const x = (canvas.width - targetWidth) / 2;
+        const y = (canvas.height - targetHeight) / 2;
+        
+        // 스타일 이미지를 반투명하게 겹쳐 그립니다.
+        ctx.drawImage(styleImg, x, y, targetWidth, targetHeight);
+        
+        ctx.restore(); 
+    }
 }
 
 
@@ -249,6 +305,13 @@ function handleModelChange(newModel) {
 
     currentModel = newModel;
     updateModelInfo();
+    
+    // 🌟 모델 변경 시 가이드 비활성화
+    isGuideActive = false;
+    guideStyleUrl = null;
+    if (drawGuideOverlay.styleImage) {
+        drawGuideOverlay.styleImage = null;
+    }
     
     const styleControls = document.getElementById("style-selection-controls");
     const toneControls = document.getElementById("tone-selection-controls"); 
@@ -284,6 +347,13 @@ function handleModelChange(newModel) {
 // ===============================================
 
 function handleImageUpload(event) {
+    // 🌟 이미지 업로드 시 가이드 비활성화
+    isGuideActive = false;
+    guideStyleUrl = null;
+    if (drawGuideOverlay.styleImage) {
+        drawGuideOverlay.styleImage = null;
+    }
+    
     const file = event.target.files[0];
     if (!file) return;
 
@@ -304,6 +374,7 @@ function handleImageUpload(event) {
 }
 
 async function processUploadedImage() {
+    
     const imgElement = document.getElementById('uploaded-image');
     if (!imgElement) return;
     
@@ -312,7 +383,7 @@ async function processUploadedImage() {
         try {
             model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
             model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
-            faceDetectorModel = await blazeface.load(); // 💡 얼굴 감지 모델 로드
+            faceDetectorModel = await blazeface.load(); 
             isInitialized = true;
         } catch(e) {
             labelContainer.innerHTML = 'Error loading models. Check console.';
@@ -331,7 +402,7 @@ async function processUploadedImage() {
 
 
 // ===============================================
-// 7. Core Prediction and UI Update (핵심 수정 부분)
+// 7. Core Prediction and UI Update
 // ===============================================
 
 async function predict(modelToUse, modelName, element) {
@@ -341,12 +412,11 @@ async function predict(modelToUse, modelName, element) {
     }
     
     // ----------------------------------------------------------------
-    // 💡 1. 얼굴 감지(Face Detection) 로직: 얼굴의 명확성 확인
+    // 💡 1. 얼굴 감지(Face Detection) 로직:
     // ----------------------------------------------------------------
-    // 이미지/캔버스의 크기를 정확히 가져오기 위해 tf.tidy 사용
     const elementTensor = tf.browser.fromPixels(element);
     const predictions = await faceDetectorModel.estimateFaces(elementTensor, FACE_DETECTION_THRESHOLD);
-    elementTensor.dispose(); // 텐서 메모리 해제
+    elementTensor.dispose(); 
 
     if (predictions.length === 0) {
         labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴이 명확하게 감지되지 않았습니다!</div><p>분석을 진행하려면 얼굴이 정면으로 잘 보이고, 충분히 밝으며, 가려지지 않았는지 확인해 주세요.</p>';
@@ -357,9 +427,7 @@ async function predict(modelToUse, modelName, element) {
         return; 
     }
     
-    // 선택적: 얼굴 크기 검사 (너무 멀리 있거나 작게 찍힌 경우)
     const largestFace = predictions[0]; 
-    // landmarks가 아닌 bounding box로 크기 계산
     const faceWidth = largestFace.bottomRight[0] - largestFace.topLeft[0];
     const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
 
@@ -373,7 +441,7 @@ async function predict(modelToUse, modelName, element) {
     }
     
     // ----------------------------------------------------------------
-    // 💡 2. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
+    // 💡 2. 분류(Classification) 로직:
     // ----------------------------------------------------------------
     
     const currentMaxPredictions = modelToUse.getTotalClasses(); 
@@ -402,7 +470,7 @@ async function predict(modelToUse, modelName, element) {
 // 8. Manual Recommendation Output 
 // ===============================================
 
-// 얼굴형 추천 출력 - ⭐ 합성 버튼 추가 및 이벤트 리스너 연결
+// 얼굴형 추천 출력 
 function showRecommendation(faceType) {
     const data = faceTypeData[faceType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -443,18 +511,32 @@ function showRecommendation(faceType) {
     `;
     outputContainer.innerHTML = recommendationHTML; 
     
-    // 🌟 버튼 이벤트 리스너 추가: 버튼이 생성된 직후에 리스너를 연결합니다.
+    // 버튼 이벤트 리스너 연결
     document.querySelectorAll('.apply-style-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const style = e.target.getAttribute('data-style');
             const face = e.target.getAttribute('data-face');
-            handleStyleOverlay(style, face); // 새로운 처리 함수 호출
+            handleStyleOverlay(style, face); 
         });
     });
 }
 
 // 퍼스널 톤 추천 출력
 function showToneRecommendation(toneType) {
+    // 🌟 톤 추천 선택 시 가이드 비활성화
+    isGuideActive = false;
+    guideStyleUrl = null;
+    if (drawGuideOverlay.styleImage) {
+        drawGuideOverlay.styleImage = null;
+    }
+    if (currentSource === 'image') {
+        // 이미지 모드에서 가이드가 꺼지면 원본 이미지를 다시 표시
+        const uploadedImg = document.getElementById('uploaded-image');
+        const synthCanvas = document.getElementById('synthesis-output-img');
+        if (uploadedImg) uploadedImg.style.display = 'block';
+        if (synthCanvas) synthCanvas.remove();
+    }
+    
     const data = personalToneData[toneType]; 
     const outputContainer = document.getElementById("recommendation-output");
     
@@ -494,34 +576,90 @@ function showToneRecommendation(toneType) {
 }
 
 
-// 🌟 스타일 합성 처리 함수 추가 (합성 결과 시뮬레이션)
+// 🌟 스타일 합성 처리 함수 (투명 오버레이 가이드 및 이미지 합성 시뮬레이션)
 function handleStyleOverlay(styleType, faceType) {
-    // 분석 루프 일시 정지 (웹캠 모드일 경우)
-    if (isRunning) {
-        toggleAnalysis(); // Pause
-    }
-    
     const container = document.getElementById("webcam-container");
     const data = faceTypeData[faceType];
-    const styleText = (styleType === 'short') ? data.short : data.long;
-    const styleImgUrl = (styleType === 'short') ? data.shortImage : data.longImage;
+    const newStyleImgUrl = (styleType === 'short') ? data.shortImage : data.longImage;
 
-    // 1. 합성 결과 메시지 업데이트
+    // 1. 가이드 토글 (Toggle) 로직
+    if (isGuideActive && guideStyleUrl === newStyleImgUrl) {
+        // 현재 가이드와 동일한 버튼을 다시 누르면 비활성화
+        isGuideActive = false;
+        guideStyleUrl = null;
+        labelContainer.innerHTML = '<div style="color: #6c757d; font-weight: bold; padding: 10px;">✅ 오버레이 가이드가 비활성화되었습니다.</div>';
+        
+        if (drawGuideOverlay.styleImage) {
+            drawGuideOverlay.styleImage = null;
+        }
+        
+        // 이미지 모드일 경우 원본 이미지를 다시 표시
+        if (currentSource === 'image') {
+            const uploadedImg = document.getElementById('uploaded-image');
+            const synthCanvas = document.getElementById('synthesis-output-img');
+            if (synthCanvas) synthCanvas.remove(); 
+            if (uploadedImg) uploadedImg.style.display = 'block';
+        }
+        return;
+    }
+    
+    // 2. 새로운 가이드 활성화
+    isGuideActive = true;
+    guideStyleUrl = newStyleImgUrl;
+
+    // 3. 메시지 업데이트
     labelContainer.innerHTML = `
         <div style="color: #6a82fb; font-weight: bold; padding: 10px;">
-            ✨ 스타일 합성 결과 시뮬레이션: **${faceType} 얼굴형 ${styleType.toUpperCase()} 스타일**
+            ✨ **오버레이 가이드 활성화!** (${faceType} ${styleType.toUpperCase()} 스타일)
         </div>
-        <p>⚠️ **알림**: 웹 환경의 한계로 인해, 실제 사용자 얼굴에 헤어 스타일이 정확히 맵핑되지는 않습니다. 선택하신 스타일 이미지를 대신 출력하여 **합성 결과**를 시뮬레이션합니다.</p>
+        <p>웹캠 앞에서 얼굴을 **반투명 헤어 스타일 이미지**에 맞추어 포즈를 취해 보세요.</p>
+        <p style="color:red;">⚠️ **(팁)** 가이드 이미지는 중앙에 고정되어 있으므로, 거리를 조절하여 크기를 맞춰주세요. 버튼을 다시 누르면 가이드가 사라집니다.</p>
     `;
 
-    // 2. 웹캠/이미지 컨테이너에 합성 결과 이미지 출력 시뮬레이션
-    container.innerHTML = ''; 
-    const synthImgElement = document.createElement('img');
-    synthImgElement.id = 'synthesis-output-img'; // CSS에서 합성 결과 전용 스타일 적용 가능
-    synthImgElement.src = styleImgUrl;
-    synthImgElement.alt = `${faceType} ${styleType} Synthesized Style`;
+    // 4. 이미지 모드일 경우: 캔버스 합성 시뮬레이션 실행 (가이드가 아닌, 확정된 결과 출력)
+    if (currentSource === 'image') {
+        if (isRunning) toggleAnalysis(); // 분석 일시 중지
+        
+        const sourceElement = document.getElementById('uploaded-image');
+        if (!sourceElement) return;
+
+        // 원본 이미지 숨김 처리
+        sourceElement.style.display = 'none';
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = sourceElement.width || sourceElement.offsetWidth;
+        const height = sourceElement.height || sourceElement.offsetHeight;
+        
+        // 이전 캔버스 제거
+        const prevCanvas = document.getElementById('synthesis-output-img');
+        if (prevCanvas) prevCanvas.remove();
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // 캔버스에 원본 이미지를 그립니다.
+        ctx.drawImage(sourceElement, 0, 0, width, height);
+        
+        // 스타일 이미지 로드 후 오버레이 그리기 (반투명도 없이)
+        const styleImg = new Image();
+        styleImg.crossOrigin = "Anonymous";
+        styleImg.onload = () => {
+            const overlayWidth = width * 0.7;
+            const overlayHeight = styleImg.height * (overlayWidth / styleImg.width);
+            const x = (width - overlayWidth) / 2;
+            const y = (height - overlayHeight) / 2;
+            
+            // 이미지 모드에서는 완전히 겹쳐 그립니다.
+            ctx.drawImage(styleImg, x, y, overlayWidth, overlayHeight);
+            
+            container.appendChild(canvas);
+            canvas.id = 'synthesis-output-img'; 
+        };
+        styleImg.src = newStyleImgUrl;
+    }
     
-    container.appendChild(synthImgElement);
+    // 웹캠 모드일 경우 loop() 함수가 자동으로 오버레이를 처리합니다.
 }
 
 
