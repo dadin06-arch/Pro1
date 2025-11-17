@@ -96,7 +96,7 @@ const personalToneData = {
     "Warm": {
         summary: "Yellow-based and orange-based warm hues enhance natural warmth and give a healthy glow.",
         hair: "Golden brown, copper brown",
-        clothing: "Coral, peach, salmon | Dark tones: Olive, khaki, mustard | Neutrals: Beige, ivory, cream",
+        clothing: "Light tones: Coral, peach, salmon | Dark tones: Olive, khaki, mustard | Neutrals: Beige, ivory, cream",
         makeup: "Lips: Coral, orange-red, brick | Eyes: Gold, bronze, warm brown | Blush: Peach, coral, apricot",
         image: 'images/warm_tone.png' 
     }
@@ -104,8 +104,9 @@ const personalToneData = {
 
 
 // ===============================================
-// 2. Event Listeners and Setup (생략)
+// 2. Event Listeners and Setup 
 // ===============================================
+
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("start-button").addEventListener("click", toggleAnalysis);
     
@@ -146,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ===============================================
-// 3. Mode Switching Logic (생략)
+// 3. Mode Switching Logic 
 // ===============================================
 
 function switchMode(mode) {
@@ -280,7 +281,7 @@ async function toggleAnalysis() {
 
 
 // ===============================================
-// 5. Webcam Prediction Loop and Model Change Handler (생략)
+// 5. Webcam Prediction Loop and Model Change Handler 
 // ===============================================
 
 function loop() {
@@ -334,7 +335,7 @@ function handleModelChange(newModel) {
 
 
 // ===============================================
-// 6. Image Upload Logic (생략)
+// 6. Image Upload Logic 
 // ===============================================
 
 function handleImageUpload(event) {
@@ -522,7 +523,7 @@ function showRecommendation(faceType) {
 }
 
 
-// 퍼스널 톤 추천 출력 (Model 2) (생략 없이 원본 유지)
+// 퍼스널 톤 추천 출력 (Model 2) (기존 유지)
 function showToneRecommendation(toneType) {
     const data = personalToneData[toneType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -586,8 +587,11 @@ function combineAndDisplayImage(styleKey, containerId) {
 
     const container = document.getElementById(containerId);
     
-    // 💡 로딩 메시지
+    // 💡 로딩 메시지 및 버튼 숨기기
+    const originalButton = container.querySelector('button.composite-btn');
+    if(originalButton) originalButton.style.display = 'none';
     container.innerHTML = '<p style="color: #007bff;">합성 중... 잠시만 기다려 주세요.</p>';
+
 
     const stickerImg = new Image();
     stickerImg.crossOrigin = "anonymous"; 
@@ -628,18 +632,18 @@ function combineAndDisplayImage(styleKey, containerId) {
         
         container.appendChild(canvas);
         
-        // 버튼 다시 추가 (캔버스가 이미지를 대체하고 버튼이 하단에 있도록)
-        const button = document.querySelector(`#${containerId} button.composite-btn`);
-        if(button) {
-            container.appendChild(button);
+        // 버튼 다시 추가 
+        if(originalButton) {
+            originalButton.style.display = 'block'; 
+            container.appendChild(originalButton);
         }
     };
 
     stickerImg.onerror = () => {
         container.innerHTML = '<p style="color: red;">⚠️ 합성 실패: 스티커 이미지(png)를 로드할 수 없습니다. 파일 경로(images/)를 확인해 주세요.</p>';
-        const button = document.querySelector(`#${containerId} button.composite-btn`);
-        if(button) {
-             container.appendChild(button);
+        if(originalButton) {
+             originalButton.style.display = 'block';
+             container.appendChild(originalButton);
         }
     };
 }
