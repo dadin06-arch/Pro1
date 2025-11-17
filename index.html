@@ -95,27 +95,29 @@
                 <div id="label-container">Waiting for analysis...</div>
             </div>
             
-            <hr>
+            <hr style="margin: 20px 0; border-top: 1px solid #eee;">
             
             <div id="recommendation-output">
                 <p>Select a model to begin the analysis or selection.</p>
             </div>
             
-            <div id="ar-container" style="display: none;">
-                <h4 class="ar-title"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
-                <p class="ar-subtitle">Adjust your head position to fit the sticker outline.</p>
-                <div id="ar-webcam-wrapper">
-                    <video id="ar-webcam-video" autoplay playsinline></video>
-                    <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
-                </div>
-                <button id="ar-stop-button" class="btn secondary-btn">⏹️ Stop Try-On</button>
+        </section>
+    </div>
+    
+    <div id="ar-container" style="display: none;">
+        <div class="ar-content-box">
+            <h2 class="ar-title"><i class="fas fa-camera"></i> AR Hairstyle Try-On</h2>
+            <p class="ar-guide">Adjust your head position to fit the sticker outline.</p>
+            
+            <div id="ar-webcam-wrapper">
+                <video id="ar-webcam-video" width="400" height="300" autoplay muted playsinline></video>
+                <img id="ar-sticker-overlay" src="" alt="AR Sticker Overlay" style="position: absolute; display: none;">
             </div>
             
-        </section>
+            <button id="ar-stop-button" class="btn secondary-btn ar-control-btn">STOP TRY-ON</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
-
 </html>
-
