@@ -101,16 +101,17 @@
                 <p>Select a model to begin the analysis or selection.</p>
             </div>
             
-            <div id="ar-container" style="display: none; margin-top: 30px; padding: 20px; border: 2px dashed #ADD8E6; border-radius: 10px; background-color: #f0f8ff;">
-                <h4 style="color: #6a82fb;"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
-                <p style="font-style: italic;">Adjust your head position to fit the sticker outline.</p>
-                <div id="ar-webcam-wrapper" style="position: relative; width: 400px; height: 300px; margin: 0 auto;">
-                    <video id="ar-webcam-video" autoplay playsinline style="width: 100%; height: 100%; border-radius: 10px;"></video>
-                    <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; pointer-events: none; display: none;">
+            <div id="ar-container" style="display: none;">
+                <h4 class="ar-title"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
+                <p class="ar-subtitle">Adjust your head position to fit the sticker outline.</p>
+                <div id="ar-webcam-wrapper">
+                    <video id="ar-webcam-video" autoplay playsinline></video>
+                    <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
                 </div>
-                <button id="ar-stop-button" class="btn secondary-btn" style="margin-top: 15px;">⏹️ Stop Try-On</button>
+                <button id="ar-stop-button" class="btn secondary-btn">⏹️ Stop Try-On</button>
             </div>
-            </section>
+            
+        </section>
     </div>
 
     <script src="script.js"></script>
