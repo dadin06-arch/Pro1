@@ -1,4 +1,4 @@
-// script.js - AI StyleMate Logic (Final Version with Face Detection + AR Try-On)
+// script.js - AI StyleMate Logic (Final Version with Face Detection + AR Try-On + Capture)
 
 // ----------------------------------------------------
 // 1. MODEL PATHS, VARIABLES & DATA DEFINITION
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     
-    // 💡 AR Stop Button Listener
+    // 💡 AR Stop Button Listener - 초기에는 stopArTryOn으로 연결
     document.getElementById("ar-stop-button").addEventListener('click', stopArTryOn);
     
     switchMode('webcam');
@@ -550,7 +550,7 @@ function updateModelInfo() {
 
 
 // ===============================================
-// 9. AR Try-On Logic (새로 추가된 핵심 기능)
+// 9. AR Try-On Logic (캡처 및 화면 고정 기능 포함)
 // ===============================================
 
 // AR 웹캠 활성화 및 스티커 오버레이
@@ -563,9 +563,22 @@ async function startArTryOn(stickerPath) {
     // AR 컨테이너 표시
     arContainer.style.display = 'block';
     
+    // 💡 캡처 후 남은 이미지 제거 및 비디오 다시 표시
+    const capturedImage = document.getElementById('ar-captured-image');
+    if (capturedImage) {
+        capturedImage.remove();
+    }
+    arWebcamVideo.style.display = 'block';
+
     // 스티커 이미지 설정
     arStickerOverlay.src = stickerPath;
     arStickerOverlay.style.display = 'block';
+    
+    // 💡 캡처/정지 버튼 설정
+    const stopButton = document.getElementById("ar-stop-button");
+    stopButton.innerText = "📸 Capture & Stop";
+    stopButton.removeEventListener('click', stopArTryOn); // 기존 리스너 제거
+    stopButton.addEventListener('click', captureAndSave); // 새로운 캡처 리스너 연결
     
     // 웹캠 스트림 설정
     try {
@@ -573,6 +586,9 @@ async function startArTryOn(stickerPath) {
             stopArWebcamStream(); // 기존 스트림이 있다면 정지
         }
         
+        // 💡 주의: 실제 사용 시 실시간 얼굴 감지 및 스티커 위치 업데이트 로직(arLoop)을 추가해야 합니다.
+        // 이 코드에는 실시간 스티커 움직임 로직은 포함되어 있지 않지만, 캡처 로직은 추가했습니다.
+
         arWebcamStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 width: 400,
@@ -584,8 +600,7 @@ async function startArTryOn(stickerPath) {
         arWebcamVideo.srcObject = arWebcamStream;
         arWebcamVideo.play();
         
-        // 거울 효과를 위해 비디오 플립 (CSS에서 처리할 수도 있지만 JS로 처리)
-        // index.html 인라인 스타일에서 이미 flip 처리를 가정함.
+        // 거울 효과를 위해 비디오 플립 
         arWebcamVideo.style.transform = 'scaleX(-1)';
         
     } catch (err) {
@@ -593,6 +608,76 @@ async function startArTryOn(stickerPath) {
         arContainer.innerHTML = '<p style="color:red;">⚠️ AR 체험에 필요한 웹캠을 활성화할 수 없습니다. 카메라 권한을 확인해 주세요.</p>';
         stopArTryOn();
     }
+}
+
+
+// 💡 [새로 추가] 캡처 및 저장 기능
+async function captureAndSave() {
+    // 1. 웹캠 스트림 정지 (화면 고정)
+    stopArWebcamStream(); 
+    
+    const video = arWebcamVideo;
+    const sticker = arStickerOverlay;
+
+    // 2. 캔버스 생성 및 설정
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+
+    // 3. 비디오(캡처된 배경) 그리기
+    // 플립 상태를 유지하여 캡처된 이미지가 웹캠에서 보던 대로 나오도록 합니다.
+    ctx.translate(canvas.width, 0); // X축 기준으로 캔버스를 이동
+    ctx.scale(-1, 1); // 좌우 반전
+
+    // 캔버스에 비디오 프레임 그리기
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // 캔버스 변환 상태 되돌리기 (스티커를 올바른 위치에 그리기 위해)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // 4. 스티커 그리기
+    if (sticker.style.display !== 'none' && sticker.src) {
+        // AR 스티커의 현재 위치와 크기 가져오기 (CSS 스타일에서)
+        // **주의: 이 로직이 작동하려면 스티커의 위치와 크기가 실시간으로 CSS에 업데이트되어야 합니다.**
+        // 현재 코드에 실시간 업데이트 로직은 없지만, 이 코드는 최종적으로 캡처 로직을 구현합니다.
+        const stickerX = parseFloat(sticker.style.left) || 0; 
+        const stickerY = parseFloat(sticker.style.top) || 0;
+        const stickerW = parseFloat(sticker.style.width) || canvas.width;
+        const stickerH = parseFloat(sticker.style.height) || canvas.height;
+
+        ctx.drawImage(sticker, stickerX, stickerY, stickerW, stickerH);
+    }
+    
+    // 5. 저장 및 다운로드 링크 생성
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'AI_StyleMate_AR_Capture.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // 6. 캡처된 이미지로 웹캠 요소 대체 (화면 고정)
+    // 캡처된 이미지를 생성하고 비디오 대신 표시합니다.
+    const capturedImage = document.createElement('img');
+    capturedImage.src = dataURL;
+    capturedImage.style.transform = 'scaleX(-1)'; // 거울처럼 보이도록 다시 플립
+    capturedImage.id = 'ar-captured-image';
+
+    // 비디오/스티커 대신 캡처된 이미지 표시
+    const parent = arWebcamVideo.parentNode;
+    if (parent) {
+        parent.insertBefore(capturedImage, arWebcamVideo);
+        arWebcamVideo.style.display = 'none';
+        arStickerOverlay.style.display = 'none'; 
+    }
+
+    // 7. 버튼 역할 변경
+    const stopButton = document.getElementById("ar-stop-button");
+    stopButton.innerText = "❌ Close AR";
+    stopButton.removeEventListener('click', captureAndSave);
+    stopButton.addEventListener('click', stopArTryOn); // 버튼의 역할을 '종료'로 변경
 }
 
 // AR 웹캠 스트림 정지
@@ -609,6 +694,23 @@ function stopArWebcamStream() {
 // AR Try-On 전체 정지 및 UI 정리
 function stopArTryOn() {
     stopArWebcamStream();
+    
+    // 💡 캡처된 이미지가 있다면 제거
+    const capturedImage = document.getElementById('ar-captured-image');
+    if (capturedImage) {
+        capturedImage.remove();
+    }
+    
+    // 비디오 요소 다시 보이게 처리
+    arWebcamVideo.style.display = 'block';
+
+    // 💡 버튼 리스너 초기화 (초기 상태로 복구)
+    const stopButton = document.getElementById("ar-stop-button");
+    stopButton.removeEventListener('click', captureAndSave);
+    stopButton.removeEventListener('click', stopArTryOn); 
+    stopButton.addEventListener('click', stopArTryOn); // 기본 stopArTryOn 리스너 다시 연결 (startArTryOn에서 오버라이드 됨)
+    stopButton.innerText = "Stop AR";
+    
     arContainer.style.display = 'none';
     arStickerOverlay.style.display = 'none';
     arStickerOverlay.src = "";
