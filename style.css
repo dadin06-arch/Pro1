@@ -1,9 +1,9 @@
-/* style.css - 최종 통합 버전 (헤더 및 버튼 디자인 원본 복원, AR Try-On 스타일 개선) */
+/* style.css - 최종 통합 버전 (퍼스널 톤 추천 스타일 및 이미지 크기 강제 축소 적용) */
 
 /* 변수 설정 */
 :root {
-    --gradient-start: #FFC0CB;        /* Light Pink */
-    --gradient-end: #ADD8E6;          /* Light Blue */
+    --gradient-start: #FFC0CB;        
+    --gradient-end: #ADD8E6;          
     --main-text-color: #333333;       
     --h2-underline-color: linear-gradient(to right, #FFC0CB, #ADD8E6); 
     --card-bg: #FFFFFF;               
@@ -13,24 +13,19 @@
     --font-montserrat: 'Montserrat', sans-serif;
     --font-lato: 'Lato', sans-serif;
 
-    /* 버튼 색상 - 원본 디자인에 가깝게 재설정 */
-    --primary-button-bg: linear-gradient(to right, #6a82fb, #fc5c7d); /* Start Analysis / Process Uploaded Image */
+    /* 버튼 색상 */
+    --primary-button-bg: linear-gradient(to right, #6a82fb, #fc5c7d); 
     --primary-button-hover-bg: linear-gradient(to right, #4c62e0, #e04461);
-    
-    --secondary-button-bg: #5a5a5a; /* Pause / Stop Try-On */
+    --secondary-button-bg: #5a5a5a; 
     --secondary-button-hover-bg: #4a4a4a;
 
-    --mode-button-border: #BBBBBB; /* Webcam / Upload Mode border */
-    --mode-button-active-bg: linear-gradient(to right, #6a82fb, #fc5c7d); /* Webcam / Upload Mode active */
+    --mode-button-border: #888888; 
+    --mode-button-active-bg: linear-gradient(to right, #6a82fb, #fc5c7d); 
     --mode-button-active-text: #FFFFFF;
 
-    --model-select-bg: #e0e0e0; /* Face Type / Personal Tone default */
-    --model-select-active-bg: linear-gradient(45deg, #FFD700, #FFA500); /* Face Type / Personal Tone active */
+    --model-select-bg: #e0e0e0; 
+    --model-select-active-bg: linear-gradient(45deg, #FFD700, #FFA500); 
     --model-select-disabled-bg: #e0e0e0; 
-
-    /* 얼굴형/톤 선택 버튼 기본 색상 */
-    --face-tone-select-btn-default-bg: #6c757d; 
-    --face-tone-select-btn-default-text: white;
 }
 
 body {
@@ -44,7 +39,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh; /* 전체 화면 채우기 */
+    min-height: 10vh;
 }
 
 header {
@@ -56,7 +51,6 @@ header {
     margin-bottom: 30px;
     display: flex;
     justify-content: center;
-    align-items: center; /* 수직 가운데 정렬 */
 }
 
 .header-content-wrapper {
@@ -70,22 +64,17 @@ header {
 
 .header-text-group {
     flex-grow: 1; 
-    display: flex; /* 내부 요소 정렬을 위해 flex 추가 */
-    flex-direction: column; /* 텍스트를 수직으로 쌓기 */
-    align-items: center; /* 텍스트 수평 가운데 정렬 */
 }
 
 .header-icons-left, .header-icons-right {
     display: flex;
     gap: 15px; 
-    /* 아이콘 그룹을 좌우 끝으로 밀기 */
-    align-items: center;
 }
 
 .header-icon {
     width: 80px; 
     height: 80px;
-    filter: none; /* 아이콘 필터 제거 */
+    filter: none; 
     opacity: 1.0; 
     transition: transform 0.2s;
 }
@@ -178,77 +167,46 @@ h2 .fas {
     color: var(--mode-button-active-text);
     box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
 }
-.secondary-btn {
-    background-color: var(--secondary-button-bg);
-    color: var(--mode-button-active-text);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-.secondary-btn:hover {
-    background-color: var(--secondary-button-hover-bg);
-}
-
 
 /* 듀얼 모드 버튼 스타일 */
 .mode-select-group {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
-    border-radius: 5px; /* 전체 그룹의 둥근 모서리 */
-    overflow: hidden; /* 내부 버튼이 튀어나오지 않게 */
 }
 .mode-btn {
-    background-color: var(--card-bg); /* 기본 흰색 */
+    background-color: var(--card-bg);
     color: var(--main-text-color);
-    border: 1px solid var(--mode-button-border); /* 얇은 회색 테두리 */
+    border: 1px solid var(--mode-button-border);
     padding: 10px 20px;
-    margin: 0; /* 그룹 내부에서 마진 제거 */
-    border-radius: 0; /* 개별 버튼의 둥근 모서리 제거 */
+    margin: 0 5px;
+    border-radius: 5px; 
     transition: all 0.2s;
     font-weight: 400;
-    flex-grow: 1; /* 각 버튼이 균등한 너비를 갖도록 */
-}
-.mode-btn:first-child {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-}
-.mode-btn:last-child {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-left: none; /* 중간 테두리 제거 */
 }
 .mode-btn.active {
     background: var(--mode-button-active-bg);
     color: var(--mode-button-active-text);
     border-color: transparent;
     font-weight: 600;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2); /* 활성 버튼에 내부 그림자 */
 }
 
 /* 모델 선택 버튼 스타일 */
-.button-group {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px; /* 버튼 간 간격 */
-    margin-top: 20px;
-}
 .model-select-btn { 
     background-color: var(--model-select-bg);
     color: var(--main-text-color);
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 10px 15px; 
-    flex-grow: 1; /* 버튼이 컨테이너 너비에 맞춰 확장 */
-    min-width: 150px; /* 최소 너비 */
 }
 .model-select-btn.active {
-    background: var(--model-select-active-bg);
+    background: linear-gradient(45deg, #FFD700, #FFA500);
     color: var(--main-text-color);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-    transform: scale(1.02); /* 활성 시 약간 확대 */
+    transform: scale(1.05);
 }
 
-/* 얼굴형 선택 버튼 그룹 스타일 */
+/* 💡 얼굴형 선택 버튼 그룹 스타일 */
 #style-selection-controls {
     text-align: center;
     padding: 15px;
@@ -260,7 +218,7 @@ h2 .fas {
 #style-selection-controls h3 {
     margin-bottom: 10px;
     font-size: 1.2em;
-    color: var(--primary-button-bg); /* 헤더 H1과 비슷한 그라데이션 */
+    color: linear-gradient(to right, #6a82fb, #fc5c7d); 
 }
 
 .face-type-buttons {
@@ -271,8 +229,8 @@ h2 .fas {
     margin-top: 10px;
 }
 .face-select-btn {
-    background-color: var(--face-tone-select-btn-default-bg); /* 기본 회색 */
-    color: var(--face-tone-select-btn-default-text);
+    background-color: #6c757d; 
+    color: white;
     padding: 10px 15px;
     border-radius: 5px;
     font-weight: 700;
@@ -283,11 +241,11 @@ h2 .fas {
     transition: background-color 0.2s, transform 0.2s;
 }
 .face-select-btn.active {
-    background: var(--primary-button-bg); 
+    background: linear-gradient(to right, #6a82fb, #fc5c7d); 
     box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
 }
 
-/* 퍼스널 톤 선택 버튼 그룹 스타일 */
+/* 💡 퍼스널 톤 선택 버튼 그룹 스타일 */
 #tone-selection-controls {
     text-align: center;
     padding: 15px;
@@ -299,7 +257,7 @@ h2 .fas {
 #tone-selection-controls h3 {
     margin-bottom: 10px;
     font-size: 1.2em;
-    color: var(--primary-button-bg); 
+    color: #fc5c7d; 
 }
 
 .tone-type-buttons {
@@ -309,8 +267,8 @@ h2 .fas {
     margin-top: 10px;
 }
 .tone-select-btn {
-    background-color: var(--face-tone-select-btn-default-bg); 
-    color: var(--face-tone-select-btn-default-text);
+    background-color: #6c757d; 
+    color: white;
     padding: 10px 20px;
     border-radius: 5px;
     font-weight: 700;
@@ -318,7 +276,7 @@ h2 .fas {
     transition: background-color 0.2s, transform 0.2s;
 }
 .tone-select-btn.active {
-    background: var(--primary-button-bg); 
+    background: linear-gradient(45deg, #fc5c7d, #6a82fb); 
     box-shadow: 0 4px 8px rgba(252, 92, 125, 0.4);
 }
 
@@ -357,13 +315,6 @@ h2 .fas {
     color: #fc5c7d; 
 }
 
-/* 구분선 */
-hr {
-    margin: 20px 0;
-    border: 0;
-    border-top: 1px solid #eee;
-}
-
 
 /* 💡 공통 추천 결과 (텍스트 + 이미지) 레이아웃 */
 #recommendation-output {
@@ -397,7 +348,7 @@ hr {
 
 
 /* ---------------------------------------------------- */
-/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) - 레이아웃 개선 */
+/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) */
 /* ---------------------------------------------------- */
 .hair-styles-container {
     display: flex;
@@ -415,7 +366,7 @@ hr {
     background-color: white;
     
     display: flex; 
-    flex-direction: column; /* 이미지와 버튼이 깔끔하게 쌓이도록 column으로 변경 */
+    flex-direction: row; 
     gap: 10px; 
     align-items: center; 
 }
@@ -423,15 +374,14 @@ hr {
 .style-column h5 {
     color: #4CAF50; 
     margin-top: 0;
-    margin-bottom: 5px; 
+    margin-bottom: 0;
     font-size: 1.0em; 
-    text-align: center;
-    width: 100%; 
+    flex: 1; 
     line-height: 1.4;
 }
 
 .style-column img {
-    /* 얼굴형 이미지 크기 강제 고정 */
+    /* 🌟 얼굴형 이미지 크기 강제 고정 */
     width: 120px !important; 
     height: 120px !important; 
     max-width: 120px !important;
@@ -441,23 +391,21 @@ hr {
     flex-shrink: 0; 
 }
 
-
-/* 💡 AR 합성 체험 버튼 스타일 */
+/* 💡 AR Try-On 버튼 스타일 */
 .ar-try-on-btn {
-    background: linear-gradient(to right, #00BFFF, #3CB371); /* 밝은 파랑/초록 계열 */
-    color: white;
-    padding: 8px 15px;
+    background: linear-gradient(to right, #FFD700, #FFA500);
+    color: var(--main-text-color);
+    font-weight: 700;
     font-size: 0.9em;
+    padding: 8px 15px;
     border-radius: 20px;
-    margin-top: 5px; 
-    box-shadow: 0 3px 6px rgba(0, 191, 255, 0.3);
-    width: 100%;
-    max-width: 180px; 
-    transition: all 0.2s ease;
+    margin-top: 10px;
+    transition: all 0.2s;
+    text-transform: none; /* 대문자 방지 */
+    letter-spacing: 0;
 }
-
 .ar-try-on-btn:hover {
-    background: linear-gradient(to right, #1E90FF, #2E8B57);
+    box-shadow: 0 4px 10px rgba(255, 165, 0, 0.4);
     transform: translateY(-2px);
 }
 
@@ -481,7 +429,7 @@ hr {
 }
 
 .tone-image-column img {
-    /* 톤 이미지 크기 고정 및 원형 */
+    /* 🌟 톤 이미지 크기 고정 및 원형 */
     width: 150px !important; 
     height: 150px !important; 
     max-width: 150px !important;
@@ -525,70 +473,6 @@ hr {
 }
 
 
-/* ---------------------------------------------------- */
-/* 🌟 3. AR 합성 체험 기능 스타일 (디자인 개선) */
-/* ---------------------------------------------------- */
-#ar-container {
-    margin-top: 30px; 
-    padding: 25px;
-    border: 2px solid #ADD8E6; 
-    border-radius: 15px;
-    background-color: #f0f8ff; /* 연한 하늘색 배경 */
-    box-shadow: 0 4px 10px rgba(173, 216, 230, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.ar-title {
-    color: #6a82fb;
-    font-size: 1.5em;
-    margin-bottom: 5px;
-}
-
-.ar-subtitle {
-    font-style: italic;
-    color: #666;
-    margin-bottom: 20px;
-    font-size: 0.9em;
-}
-
-#ar-webcam-wrapper {
-    position: relative; 
-    width: 400px; 
-    height: 300px;
-    margin: 0 auto;
-    border-radius: 10px;
-    overflow: hidden; /* 오버레이/비디오 경계 정리 */
-}
-
-#ar-webcam-video {
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    border-radius: 10px;
-    transform: scaleX(-1); /* 거울 효과 */
-    border: 4px solid #6a82fb;
-}
-
-#ar-sticker-overlay {
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    opacity: 0.9; /* 스티커를 약간 불투명하게 */
-    pointer-events: none; /* 클릭 방지 */
-}
-
-#ar-stop-button {
-    margin-top: 20px;
-    padding: 10px 30px;
-}
-
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     /* 얼굴형 추천 반응형 유지 */
@@ -621,3 +505,224 @@ hr {
     }
     .tone-text-column {
         width: 100%;
+        padding: 0 10px;
+    }
+    .tone-category {
+        text-align: left; 
+    }
+    .tone-category h5 {
+        justify-content: flex-start;
+    }
+}
+
+
+/* ============================= */
+/* 🌟 반응형 최적화 전체 적용 */
+/* ============================= */
+
+/* 태블릿 이하 (최대 1024px) */
+@media (max-width: 1024px) {
+    header {
+        padding: 30px 15px;
+    }
+
+    h1 {
+        font-size: 3em;
+    }
+
+    .header-icon {
+        width: 65px;
+        height: 65px;
+    }
+
+    .card {
+        padding: 25px;
+    }
+}
+
+/* 모바일 (최대 768px) */
+@media (max-width: 768px) {
+    header {
+        padding: 25px 10px;
+    }
+
+    .header-content-wrapper {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .header-icons-left,
+    .header-icons-right {
+        gap: 10px;
+    }
+
+    .header-icon {
+        width: 55px;
+        height: 55px;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        letter-spacing: 1px;
+    }
+
+    .subtitle {
+        font-size: 1.1em;
+    }
+
+    #main-content {
+        flex-direction: column;
+        padding: 0 15px 40px;
+    }
+
+    .card {
+        min-width: 100%;
+        padding: 22px;
+    }
+
+    /* 버튼 줄바꿈 */
+    .button-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* 웹캠 / 이미지 */
+    #webcam-container canvas,
+    #webcam-container img {
+        max-width: 300px;
+    }
+
+    /* 얼굴형 추천 반응형 */
+    .style-column {
+        flex-direction: column;
+        align-items: center;
+        padding: 12px;
+    }
+
+    .style-column img {
+        width: 85% !important;
+        max-width: 220px !important;
+        height: auto !important;
+    }
+
+    /* 퍼스널톤 추천 반응형 */
+    .tone-styles-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .tone-image-column img {
+        width: 120px !important;
+        height: 120px !important;
+        max-width: 120px !important;
+    }
+
+    .tone-text-column {
+        width: 100%;
+        padding: 0 10px;
+    }
+}
+
+/* 초소형 모바일 (최대 480px) */
+@media (max-width: 480px) {
+
+    h1 {
+        font-size: 2.0em;
+    }
+
+    .header-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .tone-image-column img {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .face-select-btn,
+    .tone-select-btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+}
+
+/* ============================= */
+/* 🌟 AR Try-On UI Styles (새로 추가됨) */
+/* ============================= */
+#ar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none; /* script.js에서 'block'으로 변경됨 */
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ar-content-box {
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+.ar-title {
+    font-size: 1.8em;
+    color: #FFC0CB;
+    margin-bottom: 5px;
+}
+
+.ar-guide {
+    color: #AAAAAA;
+    margin-bottom: 20px;
+}
+
+#ar-webcam-wrapper {
+    position: relative;
+    width: 400px; /* script.js에서 설정한 비디오 크기와 일치 */
+    height: 300px;
+    margin: 0 auto 20px;
+    border: 5px solid #ADD8E6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#ar-webcam-video, #ar-captured-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#ar-sticker-overlay {
+    /* 초기 스티커 크기 및 위치 설정 */
+    width: 80%; 
+    height: 80%; 
+    top: 10%; 
+    left: 10%; 
+    object-fit: contain;
+    mix-blend-mode: multiply; /* 배경과 합성하는 효과 */
+    position: absolute;
+}
+
+.ar-control-btn {
+    background: linear-gradient(to right, #fc5c7d, #6a82fb); 
+    color: white;
+    padding: 12px 25px;
+    font-weight: bold;
+    margin-top: 15px;
+}
