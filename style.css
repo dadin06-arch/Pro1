@@ -1,4 +1,4 @@
-/* style.css - 최종 통합 버전 (스티커 오버레이 기능 추가) */
+/* style.css - 최종 통합 버전 (헤더 이미지 및 레이아웃 유지) */
 
 /* 변수 설정 */
 :root {
@@ -21,335 +21,444 @@
 
     --mode-button-border: #888888; 
     --mode-button-active-bg: linear-gradient(to right, #6a82fb, #fc5c7d); 
-    --mode-button-active-color: white;
+    --mode-button-active-text: #FFFFFF;
+
+    --model-select-bg: #e0e0e0; 
+    --model-select-active-bg: linear-gradient(45deg, #FFD700, #FFA500); 
+    --model-select-disabled-bg: #e0e0e0; 
 }
 
-/* 기본 스타일 */
 body {
     font-family: var(--font-lato);
-    background-color: var(--bg-light);
+    background-color: var(--card-bg);
     color: var(--main-text-color);
     margin: 0;
     padding: 0;
+    text-align: center;
     line-height: 1.6;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 10vh;
 }
 
 header {
-    background: var(--primary-button-bg);
-    color: white;
-    padding: 20px 0;
-    box-shadow: 0 4px 6px var(--shadow-color);
-    margin-bottom: 20px;
-    text-align: center;
+    width: 100%;
+    background: linear-gradient(90deg, var(--gradient-start) 0%, var(--gradient-end) 100%); 
+    color: var(--main-text-color); 
+    padding: 40px 20px;
+    box-shadow: 0 6px 15px var(--shadow-color);
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
 }
 
-.header-title {
-    font-family: var(--font-montserrat);
-    font-weight: 700;
-    margin: 0;
-    font-size: 1.8em;
+.header-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1300px; /* 기존 컨테이너 너비와 유사하게 조정 */
+    width: 100%;
+    gap: 20px;
 }
 
-.header-title .subtitle {
-    font-size: 0.5em;
-    font-weight: 300;
-    vertical-align: top;
-    opacity: 0.8;
+.header-text-group {
+    flex-grow: 1; 
+}
+
+/* 🌟 헤더 이미지/아이콘 스타일 유지 */
+.header-icons-left, .header-icons-right {
+    display: flex;
+    gap: 15px; 
+}
+
+.header-icon {
+    width: 80px; 
+    height: 80px;
+    filter: none; 
+    opacity: 1.0; 
+    transition: transform 0.2s;
+}
+
+.header-icon:hover {
+    transform: scale(1.1);
+    filter: none;
+}
+
+
+h1 {
+    font-family: "Jacques Francois", serif;
+    font-weight: 800; 
+    font-size: 4em; 
+    margin-bottom: 5px;
+    letter-spacing: 2px; 
+    color: var(--main-text-color); 
+}
+
+.subtitle {
+    font-family: var(--font-lato);
+    font-size: 1.3em; 
+    opacity: 0.9; 
+    max-width: 800px;
+    margin: 0 auto;
+    color: var(--main-text-color);
 }
 
 h2 {
     font-family: var(--font-montserrat);
     font-weight: 600;
+    font-size: 1.8em;
     color: var(--main-text-color);
-    font-size: 1.5em;
-    padding-bottom: 5px;
-    border-bottom: 2px solid;
-    border-image: var(--h2-underline-color) 1;
-    margin-bottom: 20px;
+    border-bottom: 3px solid;
+    border-image: var(--h2-underline-color);
+    border-image-slice: 1;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+h2 .fas {
+    color: var(--main-text-color);
 }
 
-h3 {
-    font-family: var(--font-montserrat);
-    font-size: 1.2em;
-    margin-top: 15px;
-    margin-bottom: 10px;
-}
 
-/* 카드 및 레이아웃 */
+/* 메인 컨텐츠 및 카드 스타일 */
 #main-content {
     display: flex;
-    gap: 20px;
-    padding-bottom: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    padding: 0 20px 50px;
+    max-width: 1300px;
+    width: 100%;
 }
 
 .card {
     background-color: var(--card-bg);
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px var(--shadow-color);
-    margin-bottom: 20px;
-    flex: 1;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    flex: 1 1 350px; 
+    min-width: 320px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
-#input-section {
-    flex: 0 0 400px; /* 웹캠 너비 고정 */
-}
-
-#controls {
-    flex: 1;
-    min-width: 300px;
-}
-
-#results {
-    flex: 2;
-    min-width: 400px;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* 버튼 스타일 */
-.button-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-}
-
 .btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
     font-family: var(--font-montserrat);
     font-weight: 600;
-    transition: all 0.2s ease;
-    text-align: center;
+    border: none;
+    padding: 14px 28px;
+    margin: 10px 8px;
+    border-radius: 30px; 
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-
-.primary-btn {
-    background: var(--primary-button-bg);
-    color: white;
+.primary-btn { 
+    background: var(--primary-button-bg); 
+    color: var(--mode-button-active-text);
+    box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
 }
-
-.primary-btn:hover:not(:disabled) {
-    background: var(--primary-button-hover-bg);
-    transform: translateY(-1px);
-}
-
 .secondary-btn {
-    background-color: #eeeeee;
-    color: var(--main-text-color);
-    border: 1px solid #cccccc;
+    background-color: var(--secondary-button-bg);
+    color: var(--mode-button-active-text);
 }
-
+.primary-btn:hover:not(:disabled),
 .secondary-btn:hover:not(:disabled) {
-    background-color: #dddddd;
+    opacity: 0.85;
 }
 
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* 듀얼 모드 버튼 스타일 */
+.mode-select-group {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
 }
-
-/* 모드 버튼 */
 .mode-btn {
-    border: 2px solid var(--mode-button-border);
-    background-color: white;
+    background-color: var(--card-bg);
     color: var(--main-text-color);
+    border: 1px solid var(--mode-button-border);
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 5px; 
+    transition: all 0.2s;
+    font-weight: 400;
 }
-
 .mode-btn.active {
     background: var(--mode-button-active-bg);
-    color: var(--mode-button-active-color);
+    color: var(--mode-button-active-text);
     border-color: transparent;
+    font-weight: 600;
 }
 
-/* 웹캠 및 이미지 영역 */
+/* 모델 선택 버튼 스타일 */
+.model-select-btn { 
+    background-color: var(--model-select-bg);
+    color: var(--main-text-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px; 
+}
+.model-select-btn.active {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: var(--main-text-color);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    transform: scale(1.05);
+}
+
+/* 💡 얼굴형/톤 선택 버튼 그룹 스타일 */
+#style-selection-controls, #tone-selection-controls {
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    margin-top: 30px; 
+}
+#style-selection-controls h3, #tone-selection-controls h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: var(--main-text-color); 
+}
+#style-selection-controls h3 { color: #6a82fb; }
+#tone-selection-controls h3 { color: #fc5c7d; }
+
+
+.face-type-buttons, .tone-type-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.face-select-btn, .tone-select-btn {
+    background-color: #6c757d; 
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 700;
+    flex: 1 1 auto; 
+    min-width: 100px;
+    margin: 0;
+    font-size: 0.9em;
+    text-transform: capitalize;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.face-select-btn.active {
+    background: linear-gradient(to right, #6a82fb, #fc5c7d); 
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+.tone-select-btn.active {
+    background: linear-gradient(45deg, #fc5c7d, #6a82fb); 
+    box-shadow: 0 4px 8px rgba(252, 92, 125, 0.4);
+}
+
+
+/* 웹캠/이미지 영역 */
 #webcam-container {
-    position: relative; /* 💡 오버레이의 기준점 설정 */
+    position: relative; 
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 10px auto 20px;
     width: 100%;
-    max-width: 400px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
+    max-width: 400px; 
 }
 
-#webcam-container video, 
-#webcam-container canvas, 
-#webcam-container #uploaded-canvas,
-#webcam-container img {
-    display: block;
-    max-width: 400px;
-    width: 100%;
+#webcam-container canvas, #webcam-container img {
+    border-radius: 10px;
+    border: 4px solid;
+    border-image: linear-gradient(to right, #6a82fb, #fc5c7d) 1; 
+    box-shadow: 0 0 12px rgba(106, 130, 251, 0.3);
+    width: 100%; 
     height: auto;
-    margin: 0; /* 내부 마진 제거 */
+    max-width: 400px; 
+    display: block; 
+    margin: 0 auto;
 }
 
-#loading-indicator {
-    padding: 20px;
-    text-align: center;
-    color: #6a82fb;
-}
-
-/* 이미지 업로드 */
-#image-upload-area {
-    text-align: center;
-    padding: 10px 0;
-}
-
-/* 분석 결과 영역 */
-#prediction-output {
-    min-height: 80px;
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
-
+/* 예측 결과 (퍼센트) 컨테이너 */
 #label-container {
-    font-family: var(--font-montserrat);
-    font-weight: 400;
-    font-size: 0.95em;
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.prediction-result {
-    margin: 5px 0;
-    padding: 5px 0;
-    font-size: 1.1em;
-    font-weight: 700;
+.prediction-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #E0E0E0; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1em;
+}
+.prediction-item strong {
+    color: #fc5c7d; 
 }
 
-.result-label {
-    color: #555;
-    font-weight: 400;
-}
 
-.warning-message {
-    color: #d9534f;
-    font-weight: 700;
-}
-
-/* 추천 결과 영역 */
+/* 💡 공통 추천 결과 (텍스트 + 이미지) 레이아웃 */
 #recommendation-output {
-    padding: 10px 0;
+    text-align: left;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+    margin-top: 20px; 
+}
+
+.recommendation-content {
+    background-color: #f8f9fa; 
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .recommendation-content h4 {
-    font-family: var(--font-montserrat);
-    font-weight: 700;
-    color: #4a4a4a;
-    margin-bottom: 15px;
-    font-size: 1.3em;
+    color: var(--primary-button-bg); 
+    font-size: 1.5em;
+    margin-top: 0;
+    border-bottom: 2px solid var(--gradient-start);
+    padding-bottom: 10px;
 }
 
 .summary-text {
-    font-style: italic;
-    color: #666;
+    font-size: 1.1em;
     margin-bottom: 20px;
+    font-style: italic;
+    color: #555;
 }
 
-/* 얼굴형 추천 스타일 (2단 레이아웃) */
+
+/* ---------------------------------------------------- */
+/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) - 버튼 추가로 인한 수정 */
+/* ---------------------------------------------------- */
 .hair-styles-container {
     display: flex;
     gap: 20px;
-    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 15px;
 }
 
 .style-column {
-    flex: 1;
-    min-width: 45%;
-    background-color: #fff;
+    flex: 1 1 calc(50% - 10px);
+    min-width: 250px;
     padding: 15px;
-    border: 1px solid #f0f0f0;
-    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: white;
+    
+    display: flex; 
+    flex-direction: column; /* 🌟 버튼을 위해 컬럼으로 변경 (기존 디자인을 최대한 유지하며 버튼 추가) */
+    gap: 10px; 
+    align-items: center; 
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column; /* 버튼 추가를 위해 컬럼으로 변경 */
-    align-items: center;
 }
 
 .style-column h5 {
-    color: #6a82fb;
-    font-family: var(--font-montserrat);
-    font-size: 1em;
+    color: #4CAF50; 
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 0;
+    font-size: 1.0em; 
+    line-height: 1.4;
+    text-align: center;
 }
 
 .style-column img {
-    width: 100% !important; 
-    max-width: 250px !important;
-    height: auto !important;
+    width: 120px !important; 
+    height: 120px !important; 
+    max-width: 120px !important;
+    object-fit: cover; 
     border-radius: 4px;
-    margin-bottom: 10px; /* 이미지와 버튼 사이 간격 */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    flex-shrink: 0; 
 }
 
-/* 🌟 스티커 합성 버튼 스타일 */
+/* 🌟 합성 버튼 스타일 */
 .sticker-btn {
-    width: 90%; 
     padding: 8px 15px;
     font-size: 0.9em;
-    margin-top: 5px;
+    margin: 5px 0 0 0;
+    width: 100%; /* 너비 확장 */
 }
 
-/* 퍼스널 톤 추천 스타일 */
+
+/* ---------------------------------------------------- */
+/* 🌟 2. 퍼스널 톤 추천 스타일 (Personal Tone Guide) */
+/* ---------------------------------------------------- */
 .tone-styles-container {
     display: flex;
     gap: 20px;
-    align-items: flex-start;
+    align-items: flex-start; 
+    margin-top: 15px;
 }
 
-.tone-info-column {
-    flex: 2;
+.tone-image-column {
+    flex: 0 0 150px; 
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    justify-content: center;
+    align-items: flex-start; 
 }
+
+.tone-image-column img {
+    width: 150px !important; 
+    height: 150px !important; 
+    max-width: 150px !important;
+    object-fit: cover; 
+    border-radius: 50%; 
+    border: 3px solid #FFC0CB;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; 
+}
+
+.tone-text-column {
+    flex: 1; 
+    text-align: left;
+}
+
+.tone-category {
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee;
+}
+.tone-category:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
 
 .tone-category h5 {
-    font-family: var(--font-montserrat);
-    color: #fc5c7d;
-    font-size: 1em;
-    margin-bottom: 5px;
+    font-size: 1.1em;
+    color: #4CAF50; 
+    margin: 0 0 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .tone-category p {
     margin: 0;
-    padding-left: 5px;
-    border-left: 3px solid #eee;
+    font-size: 0.95em;
+    color: #555;
 }
 
-.tone-image-column {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
-.tone-image-column img {
-    width: 150px !important;
-    height: 150px !important;
-    max-width: 150px !important;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-/* 🌟 스티커 오버레이 스타일 (새로 추가) */
+/* ---------------------------------------------------- */
+/* 🌟 3. 스티커 오버레이 스타일 (새로 추가) */
+/* ---------------------------------------------------- */
 #sticker-overlay {
     position: absolute; 
     top: 0;
-    /* 웹캠 컨테이너와 동일한 위치/크기 유지 */
+    left: 0;
     width: 100%; 
     height: 100%; 
     
@@ -357,50 +466,75 @@ h3 {
     justify-content: center;
     align-items: center;
     
-    /* 포인터 이벤트를 통과시켜 웹캠 캔버스와 상호작용 가능하도록 설정 */
     pointer-events: none; 
     z-index: 10; 
 }
 
 #sticker-overlay img {
-    /* 스티커 이미지가 오버레이 컨테이너에 꽉 차도록 설정 */
     width: 100%; 
     height: 100%;
-    object-fit: contain; /* 비율 유지하며 꽉 채움 */
-    opacity: 0.8; /* 사용자가 뒤의 웹캠을 볼 수 있도록 약간 투명하게 설정 */
-    max-width: 400px; /* 웹캠 컨테이너의 max-width와 일치 */
+    object-fit: contain; 
+    opacity: 0.8; 
+    max-width: 400px; 
+    border: none; 
+    box-shadow: none; 
+    border-image: none; 
+    margin: 0;
 }
 
+/* ============================= */
+/* 🌟 반응형 디자인 (Media Queries) */
+/* ============================= */
 
-/* 반응형 디자인 (Media Queries) */
+/* 태블릿 이하 (최대 1024px) */
 @media (max-width: 1024px) {
-    #main-content {
-        flex-wrap: wrap;
-    }
-    
-    #input-section, #controls, #results {
-        flex: 1 1 100%; /* 전체 너비 사용 */
-        max-width: 100%;
+    header {
+        padding: 30px 15px;
     }
 
-    #input-section {
-        order: 1;
+    h1 {
+        font-size: 3em;
     }
-    #controls {
-        order: 2;
+
+    .header-icon {
+        width: 65px;
+        height: 65px;
     }
-    #results {
-        order: 3;
+
+    .card {
+        padding: 25px;
     }
 }
 
+/* 모바일 (최대 768px) */
 @media (max-width: 768px) {
-    .header-title {
-        font-size: 1.5em;
+    header {
+        padding: 25px 10px;
     }
 
-    h2 {
-        font-size: 1.3em;
+    .header-content-wrapper {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .header-icons-left,
+    .header-icons-right {
+        gap: 10px;
+    }
+
+    .header-icon {
+        width: 55px;
+        height: 55px;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        letter-spacing: 1px;
+    }
+
+    .subtitle {
+        font-size: 1.1em;
     }
 
     #main-content {
@@ -422,16 +556,11 @@ h3 {
     /* 웹캠 / 이미지 */
     #webcam-container canvas,
     #webcam-container img,
-    #sticker-overlay img {
+    #sticker-overlay img { 
         max-width: 300px;
     }
 
     /* 얼굴형 추천 반응형 */
-    .hair-styles-container {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
     .style-column {
         flex-direction: column;
         align-items: center;
@@ -455,5 +584,38 @@ h3 {
         width: 120px !important;
         height: 120px !important;
         max-width: 120px !important;
+    }
+
+    .tone-text-column {
+        width: 100%;
+        padding: 0 10px;
+    }
+}
+
+/* 초소형 모바일 (최대 480px) */
+@media (max-width: 480px) {
+
+    h1 {
+        font-size: 2.0em;
+    }
+
+    .header-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .tone-image-column img {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .face-select-btn,
+    .tone-select-btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
     }
 }
