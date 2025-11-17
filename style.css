@@ -1,4 +1,4 @@
-/* style.css - 최종 통합 버전 (퍼스널 톤 추천 스타일 및 이미지 크기 강제 축소 적용) */
+/* style.css - 최종 통합 버전 (투명 오버레이 가이드 지원) */
 
 /* 변수 설정 */
 :root {
@@ -294,7 +294,7 @@ h2 .fas {
     display: block; 
     margin: 0 auto;
 }
-/* 합성 결과 이미지 스타일 (일반 이미지와 분리) */
+/* 합성 결과 이미지/캔버스 스타일 (투명 오버레이 포함) */
 #webcam-container #synthesis-output-img {
     width: 100% !important; 
     height: auto !important;
@@ -357,7 +357,7 @@ h2 .fas {
 
 
 /* ---------------------------------------------------- */
-/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) - 수정 */
+/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) */
 /* ---------------------------------------------------- */
 .hair-styles-container {
     display: flex;
@@ -374,7 +374,6 @@ h2 .fas {
     border-radius: 6px;
     background-color: white;
     
-    /* 🌟 수정: 수직 배치 */
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
@@ -386,7 +385,7 @@ h2 .fas {
     margin-top: 0;
     margin-bottom: 0;
     font-size: 1.0em; 
-    flex: 0 0 auto; /* 텍스트는 공간을 많이 차지하지 않도록 */
+    flex: 0 0 auto; 
     line-height: 1.4;
     text-align: center; 
 }
@@ -402,7 +401,7 @@ h2 .fas {
     flex-shrink: 0; 
 }
 
-/* 🌟 합성 버튼 스타일 추가 */
+/* 🌟 합성 버튼 스타일 */
 .apply-style-btn {
     font-family: var(--font-montserrat);
     font-weight: 700;
