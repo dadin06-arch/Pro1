@@ -1,4 +1,4 @@
-// script.js - AI StyleMate Logic (Final Version with Face Detection)
+// script.js - AI StyleMate Logic (Final Version with Compositing Feature)
 
 // ----------------------------------------------------
 // 1. MODEL PATHS, VARIABLES & DATA DEFINITION
@@ -7,7 +7,7 @@ const URL_MODEL_1 = "./models/model_1/";
 const URL_MODEL_2 = "./models/model_2/"; 
 
 let model1, model2, webcam;
-let faceDetectorModel; // 💡 얼굴 감지 모델 변수
+let faceDetectorModel; 
 let labelContainer = document.getElementById("label-container");
 let currentModel = 0; 
 let requestID; 
@@ -15,64 +15,76 @@ let isRunning = false;
 let isInitialized = false; 
 let currentSource = 'webcam'; 
 
-// 💡 새로운 변수 추가: 캡처된 이미지 및 얼굴 좌표 저장
-let currentCaptureDataURL = null; 
-let currentFaceBoundingBox = null; 
+// 💡 새로운 변수 추가
+let currentCaptureCanvas = null; // 캡처된 이미지를 담을 캔버스
+let capturedFaceBounds = null;   // 감지된 얼굴 영역 (좌표)
 
-// 💡 얼굴 감지 임계값 (필요 시 조정 가능)
-const FACE_DETECTION_THRESHOLD = 0.9; // 얼굴 감지 신뢰도
-const MIN_FACE_SIZE = 50; // 최소 얼굴 크기 (픽셀)
+// 💡 얼굴 감지 임계값
+const FACE_DETECTION_THRESHOLD = 0.9;
+const MIN_FACE_SIZE = 50; 
 
-// 💡 얼굴형별 추천 데이터 및 이미지 URL 정의 (스티커 경로 추가)
+// 💡 얼굴형별 추천 데이터 및 이미지 URL 정의 (원본 이미지)
 const faceTypeData = {
     "Oval": {
         summary: "The most versatile face shape. Naturally suits most hairstyles.",
         short: "Crop cut, undercut, bob.",
         long: "Layered cuts, natural waves.",
         shortImage: 'images/oval_short.png',
-        longImage: 'images/oval_long.png',
-        shortSticker: 'images/oval_short_sticker.png', // 💡 스티커 파일 경로
-        longSticker: 'images/oval_long_sticker.png' // 💡 스티커 파일 경로
+        longImage: 'images/oval_long.png'
     },
     "Round": {
         summary: "Styles that look longer and sharper work well. Best with styles that add vertical length and slim the sides.",
         short: "Asymmetrical cuts, volume on top.",
         long: "Long bob, side-flowing layers.",
         shortImage: 'images/round_short.png',
-        longImage: 'images/round_long.png',
-        shortSticker: 'images/round_short_sticker.png',
-        longSticker: 'images/round_long_sticker.png'
+        longImage: 'images/round_long.png'
     },
     "Square": {
         summary: "Reduce sharp angles and add soft lines. Softens a strong jawline with gentle curves.",
         short: "Textured cuts, side-swept styles.",
         long: "Waves with face-framing layers.",
         shortImage: 'images/square_short.png',
-        longImage: 'images/square_long.png',
-        shortSticker: 'images/square_short_sticker.png',
-        longSticker: 'images/square_long_sticker.png'
+        longImage: 'images/square_long.png'
     },
     "Heart": {
         summary: "Keep the top light and add volume toward the bottom. Balances a wider forehead and narrower chin.",
         short: "Side bangs, face-hugging layers.",
         long: "Heavier layers below the chin, side parts.",
         shortImage: 'images/heart_short.png',
-        longImage: 'images/heart_long.png',
-        shortSticker: 'images/heart_short_sticker.png',
-        longSticker: 'images/heart_long_sticker.png'
+        longImage: 'images/heart_long.png'
     },
     "Oblong": {
         summary: "Shorten the appearance of length and widen the silhouette. Works best with styles that reduce length and increase width.",
         short: "Jaw-line bobs, forehead-covering bangs.",
         long: "Medium-length layers, styles with side volume.",
         shortImage: 'images/oblong_short.png',
-        longImage: 'images/oblong_long.png',
-        shortSticker: 'images/oblong_short_sticker.png',
-        longSticker: 'images/oblong_long_sticker.png'
+        longImage: 'images/oblong_long.png'
     }
 };
 
-// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의 (파일명 최종 수정됨)
+// 💡 합성 스티커 파일 경로 및 위치 조정 데이터 (images 폴더에 바로 저장된 파일 가정)
+const STYLES = {
+    "Oval_Short": { 
+        stickerUrl: 'images/oval_short_sticker.png', 
+        scaleFactor: 1.15, // 얼굴 너비의 115% 크기
+        yOffsetRatio: -0.45 // 얼굴 상단 좌표(y)에서 -45%만큼 위로 올림
+    },
+    "Oval_Long": {
+        stickerUrl: 'images/oval_long_sticker.png',
+        scaleFactor: 1.5,
+        yOffsetRatio: -0.2
+    },
+    "Round_Short": { stickerUrl: 'images/round_short_sticker.png', scaleFactor: 1.25, yOffsetRatio: -0.4 },
+    "Round_Long": { stickerUrl: 'images/round_long_sticker.png', scaleFactor: 1.6, yOffsetRatio: -0.25 },
+    "Square_Short": { stickerUrl: 'images/square_short_sticker.png', scaleFactor: 1.1, yOffsetRatio: -0.35 },
+    "Square_Long": { stickerUrl: 'images/square_long_sticker.png', scaleFactor: 1.4, yOffsetRatio: -0.15 },
+    "Heart_Short": { stickerUrl: 'images/heart_short_sticker.png', scaleFactor: 1.2, yOffsetRatio: -0.5 },
+    "Heart_Long": { stickerUrl: 'images/heart_long_sticker.png', scaleFactor: 1.45, yOffsetRatio: -0.1 },
+    "Oblong_Short": { stickerUrl: 'images/oblong_short_sticker.png', scaleFactor: 1.1, yOffsetRatio: -0.3 },
+    "Oblong_Long": { stickerUrl: 'images/oblong_long_sticker.png', scaleFactor: 1.35, yOffsetRatio: -0.1 }
+};
+
+// 💡 퍼스널 톤 추천 데이터 (생략 없이 원본 유지)
 const personalToneData = {
     "Cool": {
         summary: "Blue-based and purple-based cool hues make the skin look clearer and brighter.",
@@ -84,7 +96,7 @@ const personalToneData = {
     "Warm": {
         summary: "Yellow-based and orange-based warm hues enhance natural warmth and give a healthy glow.",
         hair: "Golden brown, copper brown",
-        clothing: "Light tones: Coral, peach, salmon | Dark tones: Olive, khaki, mustard | Neutrals: Beige, ivory, cream",
+        clothing: "Coral, peach, salmon | Dark tones: Olive, khaki, mustard | Neutrals: Beige, ivory, cream",
         makeup: "Lips: Coral, orange-red, brick | Eyes: Gold, bronze, warm brown | Blush: Peach, coral, apricot",
         image: 'images/warm_tone.png' 
     }
@@ -92,9 +104,8 @@ const personalToneData = {
 
 
 // ===============================================
-// 2. Event Listeners and Setup
+// 2. Event Listeners and Setup (생략)
 // ===============================================
-
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("start-button").addEventListener("click", toggleAnalysis);
     
@@ -135,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ===============================================
-// 3. Mode Switching Logic 
+// 3. Mode Switching Logic (생략)
 // ===============================================
 
 function switchMode(mode) {
@@ -191,21 +202,42 @@ async function toggleAnalysis() {
     
     if (isRunning) {
         window.cancelAnimationFrame(requestID);
-        
-        // 💡 일시 정지 시 이미지 캡처 및 저장 (PURSE 버튼 역할)
-        if (webcam && webcam.canvas) {
-            currentCaptureDataURL = webcam.canvas.toDataURL('image/png');
-        } else {
-            currentCaptureDataURL = null; 
-        }
-
         startButton.innerText = "▶️ Resume Analysis";
         startButton.classList.replace('primary-btn', 'secondary-btn');
         isRunning = false;
+
+        // 💡 [수정] 분석 중지 시, 캡처 및 얼굴 영역 저장 (Canvas 생성)
+        if (webcam && currentSource === 'webcam') {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = webcam.canvas.width;
+            tempCanvas.height = webcam.canvas.height;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(webcam.canvas, 0, 0);
+            currentCaptureCanvas = tempCanvas;
+            
+            labelContainer.innerHTML += '<p style="color:#007bff; font-weight:bold;">✨ 결과 고정됨. 아래 스타일 버튼을 눌러 합성해 보세요!</p>';
+        } else if (currentSource === 'image' && document.getElementById('uploaded-image')) {
+            const imgElement = document.getElementById('uploaded-image');
+            const tempCanvas = document.createElement('canvas');
+            // 원본 이미지 크기 사용
+            tempCanvas.width = imgElement.naturalWidth || imgElement.width;
+            tempCanvas.height = imgElement.naturalHeight || imgElement.height;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(imgElement, 0, 0, tempCanvas.width, tempCanvas.height);
+            currentCaptureCanvas = tempCanvas;
+            
+            labelContainer.innerHTML += '<p style="color:#007bff; font-weight:bold;">✨ 분석 결과 고정됨. 아래 스타일 버튼을 눌러 합성해 보세요!</p>';
+        } else {
+            currentCaptureCanvas = null; // 캡처할 이미지가 없는 경우 초기화
+        }
+        
+        // 얼굴 영역은 predict 함수에서 전역 변수 capturedFaceBounds에 저장됨.
+        
         return; 
     }
     
     if (!isInitialized) {
+        // ... (기존 초기화 로직)
         startButton.innerText = "LOADING...";
         startButton.disabled = true;
         document.getElementById("webcam-container").innerHTML = "Loading models and setting up webcam. Please wait...";
@@ -248,7 +280,7 @@ async function toggleAnalysis() {
 
 
 // ===============================================
-// 5. Webcam Prediction Loop and Model Change Handler 
+// 5. Webcam Prediction Loop and Model Change Handler (생략)
 // ===============================================
 
 function loop() {
@@ -302,7 +334,7 @@ function handleModelChange(newModel) {
 
 
 // ===============================================
-// 6. Image Upload Logic
+// 6. Image Upload Logic (생략)
 // ===============================================
 
 function handleImageUpload(event) {
@@ -334,7 +366,7 @@ async function processUploadedImage() {
         try {
             model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
             model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
-            faceDetectorModel = await blazeface.load(); // 💡 얼굴 감지 모델 로드
+            faceDetectorModel = await blazeface.load(); 
             isInitialized = true;
         } catch(e) {
             labelContainer.innerHTML = 'Error loading models. Check console.';
@@ -353,13 +385,13 @@ async function processUploadedImage() {
 
 
 // ===============================================
-// 7. Core Prediction and UI Update (핵심 수정 부분)
+// 7. Core Prediction and UI Update
 // ===============================================
 
 async function predict(modelToUse, modelName, element) {
     if (!modelToUse || !faceDetectorModel) {
         labelContainer.innerHTML = `Error: ${modelName} or Face Detector is not loaded.`;
-        currentFaceBoundingBox = null; 
+        capturedFaceBounds = null; 
         return;
     }
     
@@ -375,11 +407,11 @@ async function predict(modelToUse, modelName, element) {
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
         
-        currentFaceBoundingBox = null; 
+        capturedFaceBounds = null; 
         return; 
     }
     
-    // 선택적: 얼굴 크기 검사 (너무 멀리 있거나 작게 찍힌 경우)
+    // 선택적: 얼굴 크기 검사
     const largestFace = predictions[0]; 
     const faceWidth = largestFace.bottomRight[0] - largestFace.topLeft[0];
     const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
@@ -391,12 +423,17 @@ async function predict(modelToUse, modelName, element) {
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
         
-        currentFaceBoundingBox = null;
+        capturedFaceBounds = null;
         return;
     }
     
     // 💡 2. 얼굴 감지 성공 시 좌표 저장
-    currentFaceBoundingBox = largestFace; 
+    capturedFaceBounds = {
+        x: largestFace.topLeft[0],
+        y: largestFace.topLeft[1],
+        width: faceWidth,
+        height: faceHeight
+    };
     
     // ----------------------------------------------------------------
     // 💡 3. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
@@ -425,10 +462,10 @@ async function predict(modelToUse, modelName, element) {
 
 
 // ===============================================
-// 8. Manual Recommendation Output (수정 및 신규 함수 추가)
+// 8. Manual Recommendation Output (합성 버튼 로직)
 // ===============================================
 
-// 얼굴형 추천 출력 (캔버스 합성 로직 추가)
+// 얼굴형 추천 출력 (Model 1)
 function showRecommendation(faceType) {
     const data = faceTypeData[faceType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -438,48 +475,54 @@ function showRecommendation(faceType) {
         return;
     }
     
-    // 💡 텍스트 가이드를 먼저 표시하고 캔버스 영역을 확보
-    outputContainer.innerHTML = createRecommendationTextHTML(faceType, data); 
+    const isReadyForComposite = currentCaptureCanvas && capturedFaceBounds;
 
-    // 💡 캡처된 이미지 데이터가 없으면 합성하지 않고 경고
-    if (!currentCaptureDataURL || !currentFaceBoundingBox) {
-        outputContainer.insertAdjacentHTML('afterbegin', '<p style="color:red; font-weight:bold;">⚠️ 웹캠을 시작하고 "Pause & Lock Result" 버튼을 눌러 이미지를 캡처해야 합성이 가능합니다.</p>');
-        return;
-    }
-    
-    // 💡 두 가지 스타일 모두 합성을 시도 (비동기)
-    combineAndDisplayImage(data.shortSticker, 'Short');
-    combineAndDisplayImage(data.longSticker, 'Long');
-}
+    const compositeWarning = isReadyForComposite ? '' : `
+        <p style="color:red; font-weight:bold; margin-top: 10px;">
+            ⚠️ 경고: 합성할 이미지나 얼굴 영역이 감지되지 않았습니다. 
+            웹캠/이미지 분석 후 "Pause & Lock Result" 버튼을 눌러 이미지를 캡처해 주세요.
+        </p>`;
 
-// 💡 텍스트 추천 HTML 생성 함수 (새로 추가)
-function createRecommendationTextHTML(faceType, data) {
-     return `
+
+    const recommendationHTML = `
         <div class="recommendation-content">
             <h4>✨ Hairstyle Guide for ${faceType} Face Shape</h4>
             
+            ${compositeWarning}
             <p class="summary-text">${data.summary}</p>
             
             <div class="hair-styles-container">
                 <div class="style-column">
                     <h5><i class="fas fa-cut"></i> Short Hair: ${data.short}</h5>
-                    <div id="canvas-short-container">
-                        <img src="${data.shortImage}" alt="${faceType} Short Hairstyle (Default)">
+                    <div id="canvas-container-short" class="composite-wrapper">
+                        <img src="${data.shortImage}" alt="${faceType} Short Hairstyle">
+                        <button class="btn primary-btn composite-btn ${isReadyForComposite ? '' : 'disabled'}" 
+                                data-style="${faceType}_Short" 
+                                ${isReadyForComposite ? `onclick="combineAndDisplayImage('${faceType}_Short', 'canvas-container-short')"` : 'disabled'}>
+                            💇‍♀️ Short Style 합성!
+                        </button>
                     </div>
                 </div>
                 
                 <div class="style-column">
                     <h5><i class="fas fa-spa"></i> Long Hair: ${data.long}</h5>
-                    <div id="canvas-long-container">
-                         <img src="${data.longImage}" alt="${faceType} Long Hairstyle (Default)">
+                    <div id="canvas-container-long" class="composite-wrapper">
+                        <img src="${data.longImage}" alt="${faceType} Long Hairstyle">
+                         <button class="btn primary-btn composite-btn ${isReadyForComposite ? '' : 'disabled'}" 
+                                data-style="${faceType}_Long" 
+                                ${isReadyForComposite ? `onclick="combineAndDisplayImage('${faceType}_Long', 'canvas-container-long')"` : 'disabled'}>
+                            💃 Long Style 합성!
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     `;
+    outputContainer.innerHTML = recommendationHTML; 
 }
 
-// 퍼스널 톤 추천 출력
+
+// 퍼스널 톤 추천 출력 (Model 2) (생략 없이 원본 유지)
 function showToneRecommendation(toneType) {
     const data = personalToneData[toneType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -520,65 +563,85 @@ function showToneRecommendation(toneType) {
 }
 
 
-// 💡 신규 핵심 함수: 이미지 합성 및 출력
-async function combineAndDisplayImage(stickerPath, styleType) {
-    const containerId = `canvas-${styleType.toLowerCase()}-container`;
-    const container = document.getElementById(containerId);
-    
-    if (!container || !currentCaptureDataURL || !currentFaceBoundingBox) {
-        return; 
+// 💡 9. Hair Style Image Compositing Logic (합성 기능)
+// ===============================================
+
+/**
+ * 캡처된 이미지와 선택된 헤어 스타일 스티커를 합성하여 결과 컨테이너에 표시합니다.
+ * @param {string} styleKey STYLES 객체의 키 (예: 'Oval_Short')
+ * @param {string} containerId 결과를 표시할 HTML 요소의 ID (예: 'canvas-container-short')
+ */
+function combineAndDisplayImage(styleKey, containerId) {
+    if (!currentCaptureCanvas || !capturedFaceBounds) {
+        // 이 코드는 합성 버튼이 활성화된 후에만 실행되지만, 안전을 위해 남겨둡니다.
+        alert("합성할 원본 이미지나 얼굴 영역이 감지되지 않았습니다. 분석을 일시 정지(Pause)하여 이미지를 캡처해 주세요.");
+        return;
     }
 
-    // 1. 초기 캔버스 설정
-    const captureImg = new Image();
-    captureImg.crossOrigin = "Anonymous"; 
-    captureImg.src = currentCaptureDataURL;
-    
-    await new Promise(resolve => captureImg.onload = resolve);
+    const styleData = STYLES[styleKey];
+    if (!styleData) {
+        alert(`Error: Style data not found for key: ${styleKey}`);
+        return;
+    }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = captureImg.width;
-    canvas.height = captureImg.height;
-    const ctx = canvas.getContext('2d');
+    const container = document.getElementById(containerId);
     
-    // 2. 캡처된 이미지 그리기
-    ctx.drawImage(captureImg, 0, 0, canvas.width, canvas.height);
+    // 💡 로딩 메시지
+    container.innerHTML = '<p style="color: #007bff;">합성 중... 잠시만 기다려 주세요.</p>';
 
-    // 3. 스티커 이미지 로드
     const stickerImg = new Image();
-    stickerImg.crossOrigin = "Anonymous";
-    stickerImg.src = stickerPath;
-    await new Promise(resolve => stickerImg.onload = resolve);
-    
-    // 4. 얼굴 좌표 및 크기 추출
-    const box = currentFaceBoundingBox;
-    const [x1, y1] = box.topLeft;
-    const [x2, y2] = box.bottomRight;
-    const faceWidth = x2 - x1;
-    const faceHeight = y2 - y1;
-    
-    // 5. 스티커의 위치 및 크기 계산 (조정 필요)
-    // 이 값들은 스티커 이미지의 디자인에 따라 미세 조정해야 합니다.
-    const scaleFactor = 1.35; // 얼굴 너비 대비 스티커의 최종 너비 비율 
-    const offsetXRatio = -0.18; // 얼굴 왼쪽 상단 기준 X축 시작 오프셋 (헤어 볼륨)
-    const offsetYRatio = -0.45; // 얼굴 왼쪽 상단 기준 Y축 시작 오프셋 (이마 위)
-    
-    const stickerWidth = faceWidth * scaleFactor;
-    // 종횡비를 유지하며 높이 계산
-    const stickerHeight = (stickerWidth / stickerImg.width) * stickerImg.height; 
+    stickerImg.crossOrigin = "anonymous"; 
+    stickerImg.src = styleData.stickerUrl;
 
-    const drawX = x1 + (faceWidth * offsetXRatio);
-    const drawY = y1 + (faceHeight * offsetYRatio);
+    stickerImg.onload = () => {
+        // 1. 결과 캔버스 생성 (크기는 원본 캡처 이미지와 동일)
+        const canvas = document.createElement('canvas');
+        canvas.width = currentCaptureCanvas.width;
+        canvas.height = currentCaptureCanvas.height;
+        const ctx = canvas.getContext('2d');
 
-    // 6. 스티커 이미지 그리기 (합성) - 투명 배경 PNG를 가정함
-    ctx.drawImage(stickerImg, drawX, drawY, stickerWidth, stickerHeight);
+        // 2. 원본 캡처 이미지를 캔버스에 그립니다.
+        // **중요:** 캔버스의 크기가 웹캠/업로드 이미지의 실제 픽셀 크기이므로, 전체 크기로 그립니다.
+        ctx.drawImage(currentCaptureCanvas, 0, 0);
 
-    // 7. 결과 출력
-    container.innerHTML = ''; // 기존 내용 (기본 이미지) 제거
-    canvas.style.maxWidth = '100%'; 
-    canvas.style.borderRadius = '8px';
-    canvas.style.border = '2px solid #6a82fb';
-    container.appendChild(canvas);
+        // 3. 얼굴 영역 정보를 가져옵니다.
+        const faceX = capturedFaceBounds.x;
+        const faceY = capturedFaceBounds.y;
+        const faceWidth = capturedFaceBounds.width;
+        
+        // 4. 스티커의 최종 크기 및 위치 계산
+        const stickerWidth = faceWidth * styleData.scaleFactor;
+        const stickerHeight = (stickerWidth / stickerImg.width) * stickerImg.height; 
+        
+        // 스티커 위치: 얼굴 중앙(x) + Y 오프셋 적용
+        const stickerX = faceX + (faceWidth - stickerWidth) / 2; 
+        const stickerY = faceY + faceWidth * styleData.yOffsetRatio; 
+        
+        // 5. 헤어 스티커를 캔버스에 그립니다.
+        ctx.drawImage(stickerImg, stickerX, stickerY, stickerWidth, stickerHeight);
+
+        // 6. 결과 컨테이너 업데이트
+        container.innerHTML = '';
+        
+        // 캔버스에 스타일 적용 (CSS에서 정의된 크기를 따르도록)
+        canvas.classList.add('composite-result-canvas'); 
+        
+        container.appendChild(canvas);
+        
+        // 버튼 다시 추가 (캔버스가 이미지를 대체하고 버튼이 하단에 있도록)
+        const button = document.querySelector(`#${containerId} button.composite-btn`);
+        if(button) {
+            container.appendChild(button);
+        }
+    };
+
+    stickerImg.onerror = () => {
+        container.innerHTML = '<p style="color: red;">⚠️ 합성 실패: 스티커 이미지(png)를 로드할 수 없습니다. 파일 경로(images/)를 확인해 주세요.</p>';
+        const button = document.querySelector(`#${containerId} button.composite-btn`);
+        if(button) {
+             container.appendChild(button);
+        }
+    };
 }
 
 
