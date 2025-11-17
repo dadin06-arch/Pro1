@@ -1,4 +1,4 @@
-/* style.css - 최종 통합 버전 (투명 오버레이 가이드 지원) */
+/* style.css - 최종 통합 버전 (퍼스널 톤 추천 스타일 및 이미지 크기 강제 축소 적용, 합성 버튼 및 캔버스 스타일 추가) */
 
 /* 변수 설정 */
 :root {
@@ -168,6 +168,11 @@ h2 .fas {
     color: var(--mode-button-active-text);
     box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
 }
+.secondary-btn {
+    background-color: var(--secondary-button-bg);
+    color: var(--mode-button-active-text);
+}
+
 
 /* 듀얼 모드 버튼 스타일 */
 .mode-select-group {
@@ -294,14 +299,14 @@ h2 .fas {
     display: block; 
     margin: 0 auto;
 }
-/* 합성 결과 이미지/캔버스 스타일 (투명 오버레이 포함) */
+
+/* 🌟 합성 결과 이미지/캔버스 스타일 추가 (오버레이) */
 #webcam-container #synthesis-output-img {
     width: 100% !important; 
     height: auto !important;
     max-width: 400px !important;
     border-image: linear-gradient(to right, #FFD700, #FFA500) 1; /* 합성 시 강조 색상 */
 }
-
 
 /* 예측 결과 (퍼센트) 컨테이너 */
 #label-container {
@@ -366,6 +371,7 @@ h2 .fas {
     margin-top: 15px;
 }
 
+/* 🌟 합성 버튼을 포함하여 Column 레이아웃으로 변경 */
 .style-column {
     flex: 1 1 calc(50% - 10px);
     min-width: 250px;
@@ -375,7 +381,7 @@ h2 .fas {
     background-color: white;
     
     display: flex; 
-    flex-direction: column; 
+    flex-direction: column; /* 변경: 버튼 때문에 세로로 정렬 */
     gap: 10px; 
     align-items: center; 
 }
@@ -401,7 +407,7 @@ h2 .fas {
     flex-shrink: 0; 
 }
 
-/* 🌟 합성 버튼 스타일 */
+/* 🌟 합성 버튼 스타일 추가 */
 .apply-style-btn {
     font-family: var(--font-montserrat);
     font-weight: 700;
