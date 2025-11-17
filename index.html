@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="images/icon_face_type.png?v=2">
     
     <title>AI StyleMate: Hair Style and Color Recommendation</title>
     
     <link rel="stylesheet" href="style.css"> 
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Jacques+Francois&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
@@ -20,24 +19,35 @@
     <header>
         <div class="header-content-wrapper"> 
             <div class="header-icons-left">
-                <img src="images/icon_cosmetic.png" alt="Cosmetic Icon" class="header-icon">
-                <img src="images/icon_hair.png" alt="Palette Icon" class="header-icon">
+                <img src="images/icon_face_type.png" alt="Face type Icon" class="header-icon">
+                <img src="images/icon_personal_color.png" alt="Personal Color Icon" class="header-icon">
             </div>
+            
             <div class="header-text-group">
                 <h1>AI StyleMate</h1>
-                <p class="subtitle">Hair Style and Color Recommendation based on Face Type and Personal Tone</p>
+                <p class="subtitle">Personalized Hairstyle & Color Recommendation using AI</p>
             </div>
+            
             <div class="header-icons-right">
-                <img src="images/icon_color.png" alt="Comb Icon" class="header-icon">
-                <img src="images/icon_organic.png" alt="Organic Icon" class="header-icon">
+                <img src="images/icon_hair_style.png" alt="Hairstyle Icon" class="header-icon">
+                <img src="images/icon_makeup.png" alt="Makeup Icon" class="header-icon">
             </div>
         </div>
     </header>
 
     <div id="main-content">
-        <section id="input-section" class="card fade-in">
-            <h2><i class="fas fa-camera"></i> Input Source</h2>
+        <section id="capture" class="card fade-in">
+            <h2><i class="fas fa-camera"></i> Capture & Analysis</h2>
             
+            <div class="model-select-group">
+                <button id="model1-btn" class="btn model-select-btn active">1. Face Type Analysis</button>
+                <button id="model2-btn" class="btn model-select-btn">2. Personal Tone Analysis</button>
+            </div>
+            
+            <div id="current-model-info" style="margin-bottom: 15px; font-weight: bold;">
+                Active Model: **Face Type Analysis**
+            </div>
+
             <div class="mode-select-group">
                 <button id="mode-webcam" class="btn mode-btn active">Webcam Mode</button>
                 <button id="mode-upload" class="btn mode-btn">Image Upload Mode</button>
@@ -46,28 +56,20 @@
             <div id="webcam-container">
                 <p id="initial-message">Click "Start Analysis" to load webcam.</p>
             </div>
-            
-            <div id="webcam-controls">
-                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
+
+            <div id="webcam-controls" style="margin-top: 15px;">
+                <button id="start-button" class="btn primary-btn">▶️ Start Analysis</button>
+                <button id="screenshot-btn" class="btn secondary-btn" style="background-color: #f39c12;">📸 Take Screenshot</button>
             </div>
 
-            <div id="upload-controls" style="display: none;">
-                <input type="file" id="image-upload" accept="image/*" class="file-input">
+            <div id="upload-controls" style="display: none; margin-top: 15px;">
+                <input type="file" id="image-upload" accept="image/*" class="btn secondary-btn" style="margin-bottom: 10px;">
                 <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
-            </div>
-        </section>
-
-        <section id="controls" class="card fade-in">
-            <h2><i class="fas fa-magic"></i> Model Selection</h2>
-            <p id="current-model-info">Active Model: **Not yet loaded**</p>
-            <div class="button-group">
-                <button id="model1-btn" class="btn model-select-btn">Face Type Analysis</button>
-                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis</button>
             </div>
             
             <div id="style-selection-controls" style="display: none;">
-                <h3><i class="fas fa-scissors"></i> Hair Style Guide</h3>
-                <p>Select a face type to view recommendations.</p>
+                <h3><i class="fas fa-magic"></i> Hair Style Guide</h3>
+                <p>Select your face type to view hairstyle recommendations.</p>
                 <div class="face-type-buttons button-group">
                     <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
                     <button class="btn face-select-btn" data-facetype="Round">Round</button>
@@ -106,18 +108,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
