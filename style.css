@@ -1,0 +1,645 @@
+/* style.css - 최종 통합 버전 (퍼스널 톤 추천 스타일 및 이미지 크기 강제 축소 적용) */
+
+/* 변수 설정 */
+:root {
+    --gradient-start: #FFC0CB;        
+    --gradient-end: #ADD8E6;          
+    --main-text-color: #333333;       
+    --h2-underline-color: linear-gradient(to right, #FFC0CB, #ADD8E6); 
+    --card-bg: #FFFFFF;               
+    --bg-light: #F8F9FA;              
+    --shadow-color: rgba(0, 0, 0, 0.1);
+
+    --font-montserrat: 'Montserrat', sans-serif;
+    --font-lato: 'Lato', sans-serif;
+
+    /* 버튼 색상 */
+    --primary-button-bg: linear-gradient(to right, #6a82fb, #fc5c7d); 
+    --primary-button-hover-bg: linear-gradient(to right, #4c62e0, #e04461);
+    --secondary-button-bg: #5a5a5a; 
+    --secondary-button-hover-bg: #4a4a4a;
+
+    --mode-button-border: #888888; 
+    --mode-button-active-bg: linear-gradient(to right, #6a82fb, #fc5c7d); 
+    --mode-button-active-text: #FFFFFF;
+
+    --model-select-bg: #e0e0e0; 
+    --model-select-active-bg: linear-gradient(45deg, #FFD700, #FFA500); 
+    --model-select-disabled-bg: #e0e0e0; 
+}
+
+body {
+    font-family: var(--font-lato);
+    background-color: var(--card-bg);
+    color: var(--main-text-color);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 10vh;
+}
+
+header {
+    width: 100%;
+    background: linear-gradient(90deg, var(--gradient-start) 0%, var(--gradient-end) 100%); 
+    color: var(--main-text-color); 
+    padding: 40px 20px;
+    box-shadow: 0 6px 15px var(--shadow-color);
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.header-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    width: 100%;
+    gap: 20px;
+}
+
+.header-text-group {
+    flex-grow: 1; 
+}
+
+.header-icons-left, .header-icons-right {
+    display: flex;
+    gap: 15px; 
+}
+
+.header-icon {
+    width: 80px; 
+    height: 80px;
+    filter: none; 
+    opacity: 1.0; 
+    transition: transform 0.2s;
+}
+
+.header-icon:hover {
+    transform: scale(1.1);
+    filter: none;
+}
+
+
+h1 {
+    font-family: "Jacques Francois", serif;
+    font-weight: 800; 
+    font-size: 4em; 
+    margin-bottom: 5px;
+    letter-spacing: 2px; 
+    color: var(--main-text-color); 
+}
+
+.subtitle {
+    font-family: var(--font-lato);
+    font-size: 1.3em; 
+    opacity: 0.9; 
+    max-width: 800px;
+    margin: 0 auto;
+    color: var(--main-text-color);
+}
+
+h2 {
+    font-family: var(--font-montserrat);
+    font-weight: 600;
+    font-size: 1.8em;
+    color: var(--main-text-color);
+    border-bottom: 3px solid;
+    border-image: var(--h2-underline-color);
+    border-image-slice: 1;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+h2 .fas {
+    color: var(--main-text-color);
+}
+
+
+/* 메인 컨텐츠 및 카드 스타일 */
+#main-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    padding: 0 20px 50px;
+    max-width: 1300px;
+    width: 100%;
+}
+
+.card {
+    background-color: var(--card-bg);
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    flex: 1 1 350px; 
+    min-width: 320px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 버튼 스타일 */
+.btn {
+    font-family: var(--font-montserrat);
+    font-weight: 600;
+    border: none;
+    padding: 14px 28px;
+    margin: 10px 8px;
+    border-radius: 30px; 
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.primary-btn { 
+    background: var(--primary-button-bg); 
+    color: var(--mode-button-active-text);
+    box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
+}
+
+/* 듀얼 모드 버튼 스타일 */
+.mode-select-group {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+.mode-btn {
+    background-color: var(--card-bg);
+    color: var(--main-text-color);
+    border: 1px solid var(--mode-button-border);
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 5px; 
+    transition: all 0.2s;
+    font-weight: 400;
+}
+.mode-btn.active {
+    background: var(--mode-button-active-bg);
+    color: var(--mode-button-active-text);
+    border-color: transparent;
+    font-weight: 600;
+}
+
+/* 모델 선택 버튼 스타일 */
+.model-select-btn { 
+    background-color: var(--model-select-bg);
+    color: var(--main-text-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px; 
+}
+.model-select-btn.active {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: var(--main-text-color);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    transform: scale(1.05);
+}
+
+/* 💡 얼굴형 선택 버튼 그룹 스타일 */
+#style-selection-controls {
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    margin-top: 30px; 
+}
+#style-selection-controls h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: linear-gradient(to right, #6a82fb, #fc5c7d); 
+}
+
+.face-type-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.face-select-btn {
+    background-color: #6c757d; 
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 700;
+    flex: 1 1 100px; 
+    margin: 0;
+    font-size: 0.9em;
+    text-transform: capitalize;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.face-select-btn.active {
+    background: linear-gradient(to right, #6a82fb, #fc5c7d); 
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+
+/* 💡 퍼스널 톤 선택 버튼 그룹 스타일 */
+#tone-selection-controls {
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    margin-top: 30px; 
+}
+#tone-selection-controls h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #fc5c7d; 
+}
+
+.tone-type-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+.tone-select-btn {
+    background-color: #6c757d; 
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 1em;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.tone-select-btn.active {
+    background: linear-gradient(45deg, #fc5c7d, #6a82fb); 
+    box-shadow: 0 4px 8px rgba(252, 92, 125, 0.4);
+}
+
+
+/* 웹캠/이미지 영역 */
+#webcam-container canvas, #webcam-container img {
+    border-radius: 10px;
+    border: 4px solid;
+    border-image: linear-gradient(to right, #6a82fb, #fc5c7d) 1; 
+    box-shadow: 0 0 12px rgba(106, 130, 251, 0.3);
+    width: 100%; 
+    height: auto;
+    max-width: 400px; 
+    display: block; 
+    margin: 0 auto;
+}
+
+/* 예측 결과 (퍼센트) 컨테이너 */
+#label-container {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: var(--bg-light);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.prediction-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #E0E0E0; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1em;
+}
+.prediction-item strong {
+    color: #fc5c7d; 
+}
+
+
+/* 💡 공통 추천 결과 (텍스트 + 이미지) 레이아웃 */
+#recommendation-output {
+    text-align: left;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+    margin-top: 20px; 
+}
+
+.recommendation-content {
+    background-color: #f8f9fa; 
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.recommendation-content h4 {
+    color: var(--primary-button-bg); 
+    font-size: 1.5em;
+    margin-top: 0;
+    border-bottom: 2px solid var(--gradient-start);
+    padding-bottom: 10px;
+}
+
+.summary-text {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    font-style: italic;
+    color: #555;
+}
+
+
+/* ---------------------------------------------------- */
+/* 🌟 1. 얼굴형 추천 스타일 (Hair Style Guide) */
+/* ---------------------------------------------------- */
+.hair-styles-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.style-column {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 250px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: white;
+    
+    display: flex; 
+    flex-direction: row; 
+    gap: 10px; 
+    align-items: center; 
+}
+
+.style-column h5 {
+    color: #4CAF50; 
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.0em; 
+    flex: 1; 
+    line-height: 1.4;
+}
+
+.style-column img {
+    /* 🌟 얼굴형 이미지 크기 강제 고정 */
+    width: 120px !important; 
+    height: 120px !important; 
+    max-width: 120px !important;
+    object-fit: cover; 
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    flex-shrink: 0; 
+}
+
+
+/* ---------------------------------------------------- */
+/* 🌟 2. 퍼스널 톤 추천 스타일 (Personal Tone Guide) */
+/* ---------------------------------------------------- */
+.tone-styles-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; 
+    margin-top: 15px;
+}
+
+/* 이미지 영역 (150px 원형) */
+.tone-image-column {
+    flex: 0 0 150px; 
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+}
+
+.tone-image-column img {
+    /* 🌟 톤 이미지 크기 고정 및 원형 */
+    width: 150px !important; 
+    height: 150px !important; 
+    max-width: 150px !important;
+    object-fit: cover; 
+    border-radius: 50%; 
+    border: 3px solid #FFC0CB;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; 
+}
+
+/* 텍스트 영역 */
+.tone-text-column {
+    flex: 1; 
+    text-align: left;
+}
+
+.tone-category {
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee;
+}
+.tone-category:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+
+.tone-category h5 {
+    font-size: 1.1em;
+    color: #4CAF50; 
+    margin: 0 0 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tone-category p {
+    margin: 0;
+    font-size: 0.95em;
+    color: #555;
+}
+
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    /* 얼굴형 추천 반응형 유지 */
+    .style-column {
+        flex-direction: column; 
+        align-items: center;
+    }
+    .style-column h5 {
+        text-align: center;
+    }
+    .style-column img {
+        width: 80% !important; 
+        height: auto !important; 
+        max-width: 250px !important;
+    }
+
+    /* 톤 추천 반응형 수정 */
+    .tone-styles-container {
+        flex-direction: column; 
+        align-items: center;
+    }
+    .tone-image-column {
+        margin-bottom: 15px;
+        flex: 0 0 auto;
+    }
+    .tone-image-column img {
+        width: 120px !important; 
+        height: 120px !important; 
+        max-width: 120px !important;
+    }
+    .tone-text-column {
+        width: 100%;
+        padding: 0 10px;
+    }
+    .tone-category {
+        text-align: left; 
+    }
+    .tone-category h5 {
+        justify-content: flex-start;
+    }
+}
+
+
+/* ============================= */
+/* 🌟 반응형 최적화 전체 적용 */
+/* ============================= */
+
+/* 태블릿 이하 (최대 1024px) */
+@media (max-width: 1024px) {
+    header {
+        padding: 30px 15px;
+    }
+
+    h1 {
+        font-size: 3em;
+    }
+
+    .header-icon {
+        width: 65px;
+        height: 65px;
+    }
+
+    .card {
+        padding: 25px;
+    }
+}
+
+/* 모바일 (최대 768px) */
+@media (max-width: 768px) {
+    header {
+        padding: 25px 10px;
+    }
+
+    .header-content-wrapper {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .header-icons-left,
+    .header-icons-right {
+        gap: 10px;
+    }
+
+    .header-icon {
+        width: 55px;
+        height: 55px;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        letter-spacing: 1px;
+    }
+
+    .subtitle {
+        font-size: 1.1em;
+    }
+
+    #main-content {
+        flex-direction: column;
+        padding: 0 15px 40px;
+    }
+
+    .card {
+        min-width: 100%;
+        padding: 22px;
+    }
+
+    /* 버튼 줄바꿈 */
+    .button-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* 웹캠 / 이미지 */
+    #webcam-container canvas,
+    #webcam-container img {
+        max-width: 300px;
+    }
+
+    /* 얼굴형 추천 반응형 */
+    .style-column {
+        flex-direction: column;
+        align-items: center;
+        padding: 12px;
+    }
+
+    .style-column img {
+        width: 85% !important;
+        max-width: 220px !important;
+        height: auto !important;
+    }
+
+    /* 퍼스널톤 추천 반응형 */
+    .tone-styles-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .tone-image-column img {
+        width: 120px !important;
+        height: 120px !important;
+        max-width: 120px !important;
+    }
+
+    .tone-text-column {
+        width: 100%;
+        padding: 0 10px;
+    }
+}
+
+/* 초소형 모바일 (최대 480px) */
+@media (max-width: 480px) {
+
+    h1 {
+        font-size: 2.0em;
+    }
+
+    .header-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .tone-image-column img {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .face-select-btn,
+    .tone-select-btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+}
+
+
+
+
+
+
+
+
+
