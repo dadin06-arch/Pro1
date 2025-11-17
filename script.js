@@ -1,7 +1,7 @@
-// script.js - AI StyleMate Logic (Sticker Overlay Feature Added)
+// script.js - AI StyleMate Logic (Final Version with Face Detection and Sticker Overlay)
 
 // ----------------------------------------------------
-// 1. MODEL PATHS, VARIABLES & DATA DEFINITION (수정)
+// 1. MODEL PATHS, VARIABLES & DATA DEFINITION (수정됨)
 // ----------------------------------------------------
 const URL_MODEL_1 = "./models/model_1/"; 
 const URL_MODEL_2 = "./models/model_2/"; 
@@ -19,7 +19,7 @@ let currentSource = 'webcam';
 const FACE_DETECTION_THRESHOLD = 0.9; 
 const MIN_FACE_SIZE = 50; 
 
-// 💡 얼굴형별 추천 데이터 및 이미지 URL 정의 (스티커 이미지 경로 추가)
+// 💡 얼굴형별 추천 데이터 및 이미지 URL 정의 (스티커 이미지 경로 추가됨)
 const faceTypeData = {
     "Oval": {
         summary: "The most versatile face shape. Naturally suits most hairstyles.",
@@ -42,9 +42,9 @@ const faceTypeData = {
         longSticker: 'images/round_long_sticker.png'
     },
     "Square": {
-        summary: "Softening angles with curls or long layers works well. Avoid blunt cuts near the jawline.",
-        short: "Soft bobs, side-swept fringe.",
-        long: "Long layers, soft waves.",
+        summary: "Reduce sharp angles and add soft lines. Softens a strong jawline with gentle curves.",
+        short: "Textured cuts, side-swept styles.",
+        long: "Waves with face-framing layers.",
         shortImage: 'images/square_short.png',
         longImage: 'images/square_long.png',
         // 🌟 스티커 이미지 경로 추가
@@ -52,9 +52,9 @@ const faceTypeData = {
         longSticker: 'images/square_long_sticker.png'
     },
     "Heart": {
-        summary: "Adding width at the jawline balances the face. Avoid too much volume on top.",
-        short: "Chin-length bobs, pixie with side bangs.",
-        long: "Long, sweeping layers, curtain bangs.",
+        summary: "Keep the top light and add volume toward the bottom. Balances a wider forehead and narrower chin.",
+        short: "Side bangs, face-hugging layers.",
+        long: "Heavier layers below the chin, side parts.",
         shortImage: 'images/heart_short.png',
         longImage: 'images/heart_long.png',
         // 🌟 스티커 이미지 경로 추가
@@ -62,376 +62,401 @@ const faceTypeData = {
         longSticker: 'images/heart_long_sticker.png'
     },
     "Oblong": {
-        summary: "Creating horizontal width and avoiding height balances the length. Full bangs are effective.",
-        short: "Shoulder-length bobs, layered bobs.",
-        long: "Voluminous curls, full bangs.",
+        summary: "Shorten the appearance of length and widen the silhouette. Works best with styles that reduce length and increase width.",
+        short: "Jaw-line bobs, forehead-covering bangs.",
+        long: "Medium-length layers, styles with side volume.",
         shortImage: 'images/oblong_short.png',
         longImage: 'images/oblong_long.png',
         // 🌟 스티커 이미지 경로 추가
         shortSticker: 'images/oblong_short_sticker.png', 
         longSticker: 'images/oblong_long_sticker.png'
-    },
+    }
 };
 
-// 💡 퍼스널 톤 추천 데이터 (수정 없음)
+// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의 (수정 없음)
 const personalToneData = {
     "Cool": {
-        summary: "Best with silver, blue-based colors. Avoid yellow tones.",
-        hair: "Ash brown, platinum blonde, cool black.",
-        clothing: "Navy, royal blue, emerald green, white.",
-        makeup: "Pink, berry, blue-based red.",
-        image: 'images/cool_palette.png'
+        summary: "Blue-based and purple-based cool hues make the skin look clearer and brighter.",
+        hair: "Ash brown, ash blonde, blue-black",
+        clothing: "Light tones: Ice blue, lavender, lilac pink | Dark tones: Navy, charcoal gray, burgundy | Neutrals: White, cool gray",
+        makeup: "Lips: Raspberry, fuchsia, cool pink | Eyes: Mauve, silver, cool brown | Blush: Rose pink, lilac pink",
+        image: 'images/cool_tone.png' 
     },
     "Warm": {
-        summary: "Best with gold, yellow-based colors. Avoid blue-based tones.",
-        hair: "Copper red, golden blonde, warm brown.",
-        clothing: "Khaki, olive green, coral, ivory.",
-        makeup: "Coral, orange-based red, peach.",
-        image: 'images/warm_palette.png'
-    },
+        summary: "Yellow-based and orange-based warm hues enhance natural warmth and give a healthy glow.",
+        hair: "Golden brown, copper brown",
+        clothing: "Light tones: Coral, peach, salmon | Dark tones: Olive, khaki, mustard | Neutrals: Beige, ivory, cream",
+        makeup: "Lips: Coral, orange-red, brick | Eyes: Gold, bronze, warm brown | Blush: Peach, coral, apricot",
+        image: 'images/warm_tone.png' 
+    }
 };
 
-// ----------------------------------------------------
-// 2. INITIALIZATION
-// ----------------------------------------------------
-async function init() {
-    try {
-        const modelURL1 = URL_MODEL_1 + "model.json";
-        const metadataURL1 = URL_MODEL_1 + "metadata.json";
-        const modelURL2 = URL_MODEL_2 + "model.json";
-        const metadataURL2 = URL_MODEL_2 + "metadata.json";
 
-        document.getElementById("loading-indicator").style.display = 'block';
+// ===============================================
+// 2. Event Listeners and Setup
+// ===============================================
 
-        // Teachable Machine 모델 로드
-        model1 = await tmImage.load(modelURL1, metadataURL1);
-        model2 = await tmImage.load(modelURL2, metadataURL2);
-        
-        // BlazeFace 모델 로드
-        faceDetectorModel = await blazeface.load();
-
-        document.getElementById("loading-indicator").style.display = 'none';
-
-        isInitialized = true;
-        updateAnalysisButtonState();
-        console.log("AI Models Initialized.");
-
-    } catch (error) {
-        console.error("Initialization failed:", error);
-        document.getElementById("loading-indicator").innerHTML = "<i class=\"fas fa-exclamation-triangle\"></i> Initialization Failed. Check model paths.";
-    }
-}
-
-// ----------------------------------------------------
-// 3. ANALYSIS CONTROL AND MAIN LOOP
-// ----------------------------------------------------
-function updateAnalysisButtonState() {
-    const btn = document.getElementById("analysis-btn");
-    if (isInitialized && currentModel !== 0) {
-        btn.disabled = false;
-    } else {
-        btn.disabled = true;
-    }
-}
-
-async function toggleAnalysis() {
-    const btn = document.getElementById("analysis-btn");
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("start-button").addEventListener("click", toggleAnalysis);
     
-    if (isRunning) {
-        // Stop
-        isRunning = false;
-        if (webcam) {
-            webcam.stop();
-        }
-        window.cancelAnimationFrame(requestID);
-        btn.innerHTML = `<i class="fas fa-play"></i> Start Analysis`;
-        labelContainer.innerHTML = 'Analysis Stopped.';
-        removeStickerOverlay(); // 💡 분석 중단 시 스티커 제거
-    } else {
-        // Start
-        if (currentSource === 'webcam') {
-            try {
-                // 웹캠 초기화 및 시작
-                if (!webcam) {
-                    webcam = new tmImage.Webcam(400, 400, true); // width, height, flip
-                    await webcam.setup(); 
-                    document.getElementById("webcam-container").appendChild(webcam.webcam); 
-                    webcam.webcam.style.display = 'block';
-                    document.getElementById("webcam-container").style.width = 'fit-content'; 
-                }
-                await webcam.play();
-                isRunning = true;
-                btn.innerHTML = `<i class="fas fa-pause"></i> Stop Analysis`;
-                window.requestAnimationFrame(loop);
-                
-                // 이미지 업로드 영역 숨기기
-                document.getElementById("image-upload-area").style.display = 'none';
-                document.getElementById('uploaded-image')?.remove();
-                
-            } catch (e) {
-                alert("웹캠 접근에 실패했습니다. 카메라 권한을 확인해주세요.");
-                console.error(e);
-                isRunning = false;
-                btn.innerHTML = `<i class="fas fa-play"></i> Start Analysis`;
-                webcam = null;
-            }
-        }
-        // 이미지 모드의 분석 로직은 processImage에서 처리
-    }
-}
-
-async function loop() {
-    if (webcam && webcam.webcam.videoWidth > 0) {
-        webcam.update(); 
-        await predict();
-    }
-    if (isRunning) {
-        requestID = window.requestAnimationFrame(loop);
-    }
-}
-
-// ----------------------------------------------------
-// 4. PREDICTION LOGIC (얼굴 감지 포함)
-// ----------------------------------------------------
-async function predict() {
-    let predictionResult = null;
-    let canvasElement;
-
-    if (currentSource === 'webcam') {
-        canvasElement = webcam.canvas;
-    } else if (currentSource === 'image') {
-        canvasElement = document.getElementById('uploaded-image'); 
-        if (!canvasElement) return;
-    } else {
-        return;
-    }
+    document.getElementById("model1-btn").addEventListener("click", () => handleModelChange(1));
+    document.getElementById("model2-btn").addEventListener("click", () => handleModelChange(2));
     
-    // 1. 얼굴 감지
-    const predictions = await faceDetectorModel.estimateFaces(canvasElement, false); // flipHorizontal=false
+    document.getElementById("mode-webcam").addEventListener("click", () => switchMode('webcam'));
+    document.getElementById("mode-upload").addEventListener("click", () => switchMode('image'));
+
+    document.getElementById("image-upload").addEventListener("change", handleImageUpload);
+    document.getElementById("process-image-btn").addEventListener("click", processUploadedImage);
     
-    if (predictions.length > 0) {
-        // 가장 큰 얼굴 감지 결과 사용
-        const face = predictions[0];
-        const box = face.boundingBox;
-        const size = Math.max(box.bottom[0] - box.topLeft[0], box.bottom[1] - box.topLeft[1]);
+    document.querySelectorAll('.face-select-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tone-select-btn').forEach(btn => btn.classList.remove('active')); 
+            e.target.classList.add('active');
+            const faceType = e.target.getAttribute('data-facetype');
+            showRecommendation(faceType); 
+            removeStickerOverlay(); 
+        });
+    });
 
-        if (face.probability[0] > FACE_DETECTION_THRESHOLD && size > MIN_FACE_SIZE) {
-            // 2. Teachable Machine 분류
-            const modelToUse = currentModel === 1 ? model1 : model2;
-            const prediction = await modelToUse.predict(canvasElement);
-            
-            // 3. 결과 처리
-            prediction.sort((a, b) => b.probability - a.probability);
-            predictionResult = prediction[0];
-            
-            // 4. 결과 출력
-            let outputHTML = `
-                <p>✅ **Analysis Complete!**</p>
-                <div class="prediction-result">
-                    <span class="result-label">Predicted Type:</span> 
-                    <span class="result-value">${predictionResult.className}</span> 
-                    <span class="result-conf">(${Math.round(predictionResult.probability * 100)}%)</span>
-                </div>
-                <div class="prediction-details">
-            `;
-            
-            // 하위 결과 출력
-            for (let i = 0; i < prediction.length; i++) {
-                outputHTML += `<p>${prediction[i].className}: ${Math.round(prediction[i].probability * 100)}%</p>`;
-            }
-            outputHTML += '</div>';
-            labelContainer.innerHTML = outputHTML;
+    document.querySelectorAll('.tone-select-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active')); 
+            document.querySelectorAll('.tone-select-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            const toneType = e.target.getAttribute('data-tonetype');
+            showToneRecommendation(toneType); 
+            removeStickerOverlay(); 
+        });
+    });
+    
+    switchMode('webcam');
+    
+    document.getElementById("style-selection-controls").style.display = 'none';
+    document.getElementById("tone-selection-controls").style.display = 'none';
+});
 
-            // 5. 추천 출력
-            if (currentModel === 1) {
-                showRecommendation(predictionResult.className);
-            } else if (currentModel === 2) {
-                showToneRecommendation(predictionResult.className);
-            }
 
-        } else {
-            labelContainer.innerHTML = '<div class="warning-message">⚠️ **Face not clear.** Please move closer or look directly at the camera.</div>';
-            document.getElementById("recommendation-output").innerHTML = "<p>Please adjust your position for accurate analysis.</p>";
-        }
-    } else {
-        labelContainer.innerHTML = '<div class="warning-message">⚠️ **No face detected.** Ensure your face is visible.</div>';
-        document.getElementById("recommendation-output").innerHTML = "<p>Please ensure your face is visible in the frame.</p>";
-    }
-}
+// ===============================================
+// 3. Mode Switching Logic 
+// ===============================================
 
-// ----------------------------------------------------
-// 5. MODE AND MODEL SWITCHING
-// ----------------------------------------------------
 function switchMode(mode) {
+    if (currentSource === mode) return;
+
     if (isRunning) {
-        toggleAnalysis(); // 분석 중지
+        // 모드 전환 시 웹캠 루프 중지
+        window.cancelAnimationFrame(requestID);
+        isRunning = false; 
     }
+    
+    const webcamContainer = document.getElementById("webcam-container");
+    webcamContainer.innerHTML = '';
     
     currentSource = mode;
     
-    document.getElementById("webcam-mode-btn").classList.remove('active');
-    document.getElementById("image-mode-btn").classList.remove('active');
+    document.getElementById("mode-webcam").classList.remove('active');
+    document.getElementById("mode-upload").classList.remove('active');
     
-    if (mode === 'webcam') {
-        document.getElementById("webcam-mode-btn").classList.add('active');
-        document.getElementById("image-upload-area").style.display = 'none';
-        document.getElementById("webcam-container").style.display = 'block';
-        document.getElementById('uploaded-image')?.remove();
-        document.getElementById("process-image-btn").style.display = 'none';
+    const webcamControls = document.getElementById("webcam-controls");
+    const uploadControls = document.getElementById("upload-controls");
+    const startButton = document.getElementById("start-button");
+    
+    removeStickerOverlay(); 
 
-        if (webcam) {
-            webcam.webcam.style.display = 'block';
+    if (mode === 'webcam') {
+        document.getElementById("mode-webcam").classList.add('active');
+        webcamControls.style.display = 'block';
+        uploadControls.style.display = 'none';
+        
+        // 웹캠 캔버스 다시 표시
+        if (webcam && webcam.canvas) {
+            webcamContainer.appendChild(webcam.canvas);
+        } else {
+            webcamContainer.innerHTML = '<p id="initial-message">Click "Start Analysis" to load webcam.</p>';
         }
-    } else {
-        document.getElementById("image-mode-btn").classList.add('active');
-        document.getElementById("image-upload-area").style.display = 'block';
+
+        // 버튼 텍스트 초기화
+        startButton.innerText = "🚀 Start Analysis";
+        startButton.classList.replace('secondary-btn', 'primary-btn');
+        startButton.disabled = false;
+
+
+    } else if (mode === 'image') {
+        document.getElementById("mode-upload").classList.add('active');
+        webcamControls.style.display = 'none';
+        uploadControls.style.display = 'block';
+        webcamContainer.innerHTML = '<p id="initial-message">Please upload an image.</p>';
         
         if (webcam) {
-            webcam.stop();
-            webcam.webcam.style.display = 'none';
+            webcam.pause();
+        }
+    }
+    
+    labelContainer.innerHTML = 'Waiting for analysis...';
+    document.getElementById("recommendation-output").innerHTML = '<p>Select a model to begin the analysis or selection.</p>';
+}
+
+
+// ===============================================
+// 4. Initialization, Webcam Loop Control (toggleAnalysis) (수정됨)
+// ===============================================
+
+async function toggleAnalysis() {
+    const startButton = document.getElementById("start-button");
+    
+    if (isRunning) {
+        // ⏸️ Pause & Lock Result (일시 정지)
+        window.cancelAnimationFrame(requestID);
+        webcam.pause(); // 웹캠 비디오 정지 (화면 고정)
+        startButton.innerText = "▶️ Resume Analysis";
+        startButton.classList.replace('primary-btn', 'secondary-btn');
+        isRunning = false;
+        removeStickerOverlay(); 
+        return; 
+    }
+    
+    // 🚀 Start or ▶️ Resume Analysis (시작/재개)
+    
+    if (!isInitialized) {
+        // 초기화 로직 (Start Analysis)
+        startButton.innerText = "LOADING...";
+        startButton.disabled = true;
+        document.getElementById("webcam-container").innerHTML = "Loading models and setting up webcam. Please wait...";
+        
+        try {
+            model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
+            model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
+            faceDetectorModel = await blazeface.load();
+
+            const flip = true; 
+            webcam = new tmImage.Webcam(400, 300, flip); 
+            await webcam.setup(); 
+
+            document.getElementById("webcam-container").innerHTML = ''; 
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            
+            currentModel = 1; 
+            updateModelInfo();
+            isInitialized = true;
+
+        } catch (error) {
+            console.error("Initialization error:", error);
+            document.getElementById("webcam-container").innerHTML = "<p style='color:red;'>⚠️ Error! Check console. (Ensure files are present and running on HTTPS)</p>";
+            startButton.innerText = "⚠️ Error. Retry";
+            startButton.disabled = false;
+            return;
+        }
+    }
+    
+    // 웹캠 재생 및 루프 시작
+    if (webcam) webcam.play(); 
+    startButton.innerText = "⏸️ Pause & Lock Result";
+    startButton.classList.replace('secondary-btn', 'primary-btn');
+    startButton.disabled = false;
+    isRunning = true;
+    loop(); 
+}
+
+
+// ===============================================
+// 5. Webcam Prediction Loop and Model Change Handler 
+// ===============================================
+
+function loop() {
+    if (currentSource === 'webcam' && isRunning) { // isRunning 체크 추가
+        webcam.update(); 
+        
+        const modelToUse = (currentModel === 1) ? model1 : model2;
+        const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
+        
+        if (modelToUse) {
+            predict(modelToUse, modelName, webcam.canvas);
+        }
+    }
+    
+    if (isRunning) {
+        requestID = window.requestAnimationFrame(loop); 
+    }
+}
+
+
+function handleModelChange(newModel) {
+    if (currentModel === newModel) return;
+
+    currentModel = newModel;
+    updateModelInfo();
+    
+    const styleControls = document.getElementById("style-selection-controls");
+    const toneControls = document.getElementById("tone-selection-controls"); 
+    const recommendationOutput = document.getElementById("recommendation-output");
+    
+    removeStickerOverlay(); 
+    
+    // 모델 컨트롤 표시/숨김
+    if (newModel === 1) { 
+        styleControls.style.display = 'block';
+        toneControls.style.display = 'none';
+        recommendationOutput.innerHTML = '<p>Select a Face Type button from the **Hair Style Guide** to see recommendations.</p>';
+        document.querySelectorAll('.tone-select-btn').forEach(btn => btn.classList.remove('active'));
+        
+    } else { 
+        styleControls.style.display = 'none'; 
+        toneControls.style.display = 'block'; 
+        recommendationOutput.innerHTML = '<p>Select a Personal Tone button from the **Personal Tone Guide** to see recommendations.</p>';
+        document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active'));
+    }
+    
+    // 현재 웹캠이 멈춰있거나 이미지 모드일 때, 다시 분석을 실행 (결과 갱신)
+    if ((currentSource === 'webcam' && !isRunning && isInitialized) || currentSource === 'image') {
+        const modelToUse = (currentModel === 1) ? model1 : model2;
+        const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
+        const element = (currentSource === 'webcam') ? webcam.canvas : document.getElementById('uploaded-image');
+        
+        if(element) {
+            predict(modelToUse, modelName, element);
+        }
+    } 
+}
+
+
+// ===============================================
+// 6. Image Upload Logic
+// ===============================================
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        // 기존 이미지/캔버스 제거
+        const existingImg = document.getElementById('uploaded-image');
+        if (existingImg) existingImg.remove();
+        
+        const imgElement = document.createElement('img');
+        imgElement.id = 'uploaded-image';
+        imgElement.src = e.target.result;
+        
+        const container = document.getElementById("webcam-container");
+        container.innerHTML = ''; 
+        container.appendChild(imgElement);
+
+        document.getElementById("process-image-btn").disabled = false;
+        labelContainer.innerHTML = 'Image uploaded. Click "Process Uploaded Image" to analyze.';
+        
+        removeStickerOverlay(); 
+    };
+    reader.readAsDataURL(file);
+}
+
+async function processUploadedImage() {
+    const imgElement = document.getElementById('uploaded-image');
+    if (!imgElement) return;
+    
+    if (!isInitialized) {
+        labelContainer.innerHTML = 'Loading models... Please wait.';
+        try {
+            model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
+            model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
+            faceDetectorModel = await blazeface.load(); 
+            isInitialized = true;
+        } catch(e) {
+            labelContainer.innerHTML = 'Error loading models. Check console.';
+            return;
         }
     }
 
-    // 결과 및 컨트롤 초기화
-    document.getElementById("recommendation-output").innerHTML = "<p>Select a model and start analysis.</p>";
-    labelContainer.innerHTML = "Waiting for analysis...";
-    updateModelInfo();
+    const modelToUse = (currentModel === 1) ? model1 : model2;
+    const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
+
+    labelContainer.innerHTML = 'Analyzing image...';
+    await predict(modelToUse, modelName, imgElement); 
+    
+    document.getElementById("process-image-btn").innerText = 'Analysis Complete (Click to re-analyze)';
 }
 
-function switchModel(modelNumber) {
-    if (isRunning) {
-        toggleAnalysis(); // 기존 분석 중지
+
+// ===============================================
+// 7. Core Prediction and UI Update
+// ===============================================
+
+async function predict(modelToUse, modelName, element) {
+    if (!modelToUse || !faceDetectorModel) {
+        labelContainer.innerHTML = `Error: ${modelName} or Face Detector is not loaded.`;
+        return;
     }
     
-    currentModel = modelNumber;
-    updateModelInfo();
-    updateAnalysisButtonState();
-    
-    // 수동 선택 컨트롤 토글
-    document.getElementById("face-selection-controls").style.display = (modelNumber === 1) ? 'block' : 'none';
-    document.getElementById("tone-selection-controls").style.display = (modelNumber === 2) ? 'block' : 'none';
-    
-    // 결과 초기화
-    document.getElementById("recommendation-output").innerHTML = "<p>Select an option to view recommendations.</p>";
-    labelContainer.innerHTML = "Waiting for analysis...";
-}
+    // ----------------------------------------------------------------
+    // 💡 1. 얼굴 감지(Face Detection) 로직
+    // ----------------------------------------------------------------
+    const predictions = await faceDetectorModel.estimateFaces(element, FACE_DETECTION_THRESHOLD);
 
-function updateModelInfo() {
-    const infoElement = document.getElementById("current-model-info");
-    const btn1 = document.getElementById("model1-btn");
-    const btn2 = document.getElementById("model2-btn");
+    if (predictions.length === 0) {
+        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴이 명확하게 감지되지 않았습니다!</div><p>분석을 진행하려면 얼굴이 정면으로 잘 보이고, 충분히 밝으며, 가려지지 않았는지 확인해 주세요.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 명확한 얼굴을 감지할 수 없습니다.</p>';
+        
+        document.getElementById("style-selection-controls").style.display = 'none';
+        document.getElementById("tone-selection-controls").style.display = 'none';
+        return; 
+    }
+    
+    const largestFace = predictions[0]; 
+    const faceWidth = largestFace.bottomRight[0] - largestFace.topLeft[0];
+    const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
 
+    if (faceWidth < MIN_FACE_SIZE || faceHeight < MIN_FACE_SIZE) {
+        labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴 크기가 너무 작습니다!</div><p>카메라에 더 가까이 다가가거나, 사진에서 얼굴이 더 크게 보이도록 해 주세요.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 얼굴 크기가 너무 작습니다.</p>';
+        
+        document.getElementById("style-selection-controls").style.display = 'none';
+        document.getElementById("tone-selection-controls").style.display = 'none';
+        return;
+    }
+    
+    // ----------------------------------------------------------------
+    // 💡 2. 분류(Classification) 로직
+    // ----------------------------------------------------------------
+    
+    const currentMaxPredictions = modelToUse.getTotalClasses(); 
+    const prediction = await modelToUse.predict(element);
+
+    let resultHTML = `<div class="model-name-title"><h3>${modelName} Results:</h3></div>`;
+    
+    for (let i = 0; i < currentMaxPredictions; i++) {
+        const classPrediction = 
+            `<strong>${prediction[i].className}</strong>: ${(prediction[i].probability * 100).toFixed(1)}%`;
+        resultHTML += `<div class="prediction-item">${classPrediction}</div>`;
+    }
+    labelContainer.innerHTML = resultHTML;
+    
     if (currentModel === 1) {
-        infoElement.innerHTML = "Active Model: **Face Type Analysis**";
-        btn1.classList.add('active');
-        btn2.classList.remove('active');
+        // 결과가 나온 후 추천 메뉴 보이게
+        document.getElementById("style-selection-controls").style.display = 'block';
+        document.getElementById("tone-selection-controls").style.display = 'none'; 
     } else if (currentModel === 2) {
-        infoElement.innerHTML = "Active Model: **Personal Tone Analysis**";
-        btn1.classList.remove('active');
-        btn2.classList.add('active');
-    } else {
-        infoElement.innerHTML = "Select a model to start analysis.";
-        btn1.classList.remove('active');
-        btn2.classList.remove('active');
-    }
-
-    if (currentSource === 'image' && document.getElementById('uploaded-image')) {
-         document.getElementById("process-image-btn").innerText = 'Re-Analyze Image';
-    } else if (currentSource === 'image') {
-         document.getElementById("process-image-btn").innerText = 'Analyze Image';
+        document.getElementById("tone-selection-controls").style.display = 'block';
+        document.getElementById("style-selection-controls").style.display = 'none'; 
     }
 }
 
-// ----------------------------------------------------
-// 6. IMAGE UPLOAD & PROCESSING
-// ----------------------------------------------------
-document.getElementById('image-upload').addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const container = document.getElementById("webcam-container");
-            document.getElementById('uploaded-image')?.remove(); 
-            
-            const img = document.createElement('img');
-            img.id = 'uploaded-image';
-            img.src = e.target.result;
-            
-            // Teachable Machine이 인식할 수 있도록 이미지를 캔버스에 그립니다.
-            const canvas = document.createElement('canvas');
-            canvas.id = 'uploaded-canvas'; // 캔버스 ID 추가
-            
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-                
-                // 캔버스를 컨테이너에 추가 (분석 시 사용)
-                container.appendChild(canvas);
-                
-                // CSS가 캔버스에도 적용되도록 설정
-                canvas.style.maxWidth = '400px'; 
-                canvas.style.width = '100%';
-                
-                document.getElementById("webcam-container").style.display = 'block';
-                document.getElementById("process-image-btn").style.display = 'block';
-                document.getElementById("process-image-btn").innerText = 'Analyze Image';
-            };
-        };
-        reader.readAsDataURL(file);
-    }
-});
 
-function processImage() {
-    if (currentModel === 0) {
-        alert("Please select a model (Face Type or Personal Tone) first.");
-        return;
-    }
-    
-    // 이미지 분석은 processImage를 호출할 때 한 번만 실행되도록 합니다.
-    const canvas = document.getElementById('uploaded-canvas');
-    if (canvas) {
-        predict();
-        document.getElementById("process-image-btn").innerText = 'Re-Analyze Image';
-    } else {
-        alert("Please upload an image first.");
-    }
-}
+// ===============================================
+// 8. Manual Recommendation Output (합성 버튼 추가됨) (수정됨)
+// ===============================================
 
-// ----------------------------------------------------
-// 7. MANUAL SELECTION
-// ----------------------------------------------------
-document.querySelectorAll('.face-select-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-        showRecommendation(e.target.getAttribute('data-facetype'));
-        labelContainer.innerHTML = `Manual Selection: **${e.target.getAttribute('data-facetype')}** Face Type`;
-        removeStickerOverlay(); // 💡 수동 선택 시 스티커 제거
-    });
-});
-
-document.querySelectorAll('.tone-select-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-        showToneRecommendation(e.target.getAttribute('data-tonetype'));
-        labelContainer.innerHTML = `Manual Selection: **${e.target.getAttribute('data-tonetype')}** Tone`;
-    });
-});
-
-
-// ----------------------------------------------------
-// 8. RECOMMENDATION OUTPUT (수정)
-// ----------------------------------------------------
-
-// 얼굴형 추천 출력 (합성 버튼 추가)
+// 얼굴형 추천 출력
 function showRecommendation(faceType) {
-    if (!faceTypeData[faceType]) {
-        document.getElementById("recommendation-output").innerHTML = `<p class="error-message">Error: Recommendation data for ${faceType} not found.</p>`;
-        return;
-    }
-
     const data = faceTypeData[faceType]; 
     const outputContainer = document.getElementById("recommendation-output");
     
+    if (!data) {
+        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${faceType}.</p>`;
+        return;
+    }
+    
+    removeStickerOverlay(); 
+
     const recommendationHTML = `
         <div class="recommendation-content">
             <h4>✨ Hairstyle Guide for ${faceType} Face Shape</h4>
@@ -443,16 +468,14 @@ function showRecommendation(faceType) {
                     <h5><i class="fas fa-cut"></i> Short Hair: ${data.short}</h5>
                     <img src="${data.shortImage}" alt="${faceType} Short Hairstyle">
                     <button class="btn primary-btn sticker-btn" 
-                            data-sticker="${data.shortSticker}" 
-                            data-type="short">🖼️ 합성 미리보기 (Short)</button>
+                            data-sticker="${data.shortSticker}">🖼️ 합성 미리보기 (Short)</button>
                 </div>
                 
                 <div class="style-column">
                     <h5><i class="fas fa-spa"></i> Long Hair: ${data.long}</h5>
                     <img src="${data.longImage}" alt="${faceType} Long Hairstyle">
                     <button class="btn primary-btn sticker-btn" 
-                            data-sticker="${data.longSticker}" 
-                            data-type="long">🖼️ 합성 미리보기 (Long)</button>
+                            data-sticker="${data.longSticker}">🖼️ 합성 미리보기 (Long)</button>
                 </div>
             </div>
         </div>
@@ -468,27 +491,28 @@ function showRecommendation(faceType) {
     });
 }
 
-// 퍼스널 톤 추천 출력 (수정 없음)
+// 퍼스널 톤 추천 출력
 function showToneRecommendation(toneType) {
-    if (!personalToneData[toneType]) {
-        document.getElementById("recommendation-output").innerHTML = `<p class="error-message">Error: Recommendation data for ${toneType} not found.</p>`;
-        return;
-    }
-    removeStickerOverlay(); // 💡 톤 추천 시 스티커 제거
-
     const data = personalToneData[toneType]; 
     const outputContainer = document.getElementById("recommendation-output");
+    
+    if (!data) {
+        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${toneType}.</p>`;
+        return;
+    }
+    
+    removeStickerOverlay(); 
 
-    // ... (기존 showToneRecommendation 로직 유지)
     const recommendationHTML = `
         <div class="recommendation-content">
-            <h4>✨ Personal Tone Guide for ${toneType} Tone</h4>
+            <h4>✨ Personal Color Guide for ${toneType} Tone</h4>
+            
             <p class="summary-text">${data.summary}</p>
             
             <div class="tone-styles-container">
-                <div class="tone-info-column">
+                <div class="tone-text-column">
                     <div class="tone-category">
-                        <h5><i class="fas fa-paint-brush"></i> Hair Colors</h5>
+                        <h5><i class="fas fa-cut"></i> Hair Colors</h5>
                         <p>${data.hair}</p>
                     </div>
                     <div class="tone-category">
@@ -506,21 +530,46 @@ function showToneRecommendation(toneType) {
             </div>
         </div>
     `;
-    outputContainer.innerHTML = recommendationHTML;
+    outputContainer.innerHTML = recommendationHTML; 
 }
 
 
-// ----------------------------------------------------
-// 9. New Function: Sticker Overlay Logic (새로 추가)
-// ----------------------------------------------------
+function updateModelInfo() {
+    const infoElement = document.getElementById("current-model-info");
+    const btn1 = document.getElementById("model1-btn");
+    const btn2 = document.getElementById("model2-btn");
 
-// 💡 스티커 오버레이를 제거하는 함수
+    if (currentModel === 1) {
+        infoElement.innerHTML = "Active Model: **Face Type Analysis**";
+        btn1.classList.add('active');
+        btn2.classList.remove('active');
+    } else if (currentModel === 2) {
+        infoElement.innerHTML = "Active Model: **Personal Tone Analysis**";
+        btn1.classList.remove('active');
+        btn2.classList.add('active');
+    }
+
+    if (currentSource === 'image' && document.getElementById('uploaded-image')) {
+         document.getElementById("process-image-btn").innerText = 'Re-Analyze Image';
+    }
+}
+
+
+// ===============================================
+// 9. New Function: Sticker Overlay Logic (새로 추가)
+// ===============================================
+
 function removeStickerOverlay() {
     const existingOverlay = document.getElementById('sticker-overlay');
     if (existingOverlay) {
         existingOverlay.remove();
-        if (currentSource === 'webcam') {
-            labelContainer.innerHTML = 'Analysis Stopped.';
+        // 스티커 제거 시 메시지 복구
+        if (isRunning) {
+            labelContainer.innerHTML = 'Running analysis...';
+        } else if (currentSource === 'webcam') {
+             // 분석이 정지된 상태면 결과가 고정되어 있으므로 메시지를 바꾸지 않음.
+        } else {
+             labelContainer.innerHTML = 'Waiting for analysis...';
         }
     }
 }
@@ -528,42 +577,34 @@ function removeStickerOverlay() {
 async function startStickerWebcam(stickerPath) {
     const webcamContainer = document.getElementById("webcam-container");
     
-    // 1. 분석 중이 아니라면 웹캠 모드로 전환하고 웹캠 시작
-    if (!isRunning || currentSource === 'image') {
-        if (currentSource === 'image') {
-             // 이미지 모드에서 버튼을 누르면 웹캠 모드로 전환
-            switchMode('webcam');
-        }
-        // 웹캠이 켜져 있지 않다면 켜기
-        if (!isRunning) {
-            await toggleAnalysis();
-        }
+    // 1. 이미지 모드일 경우 웹캠 모드로 전환
+    if (currentSource === 'image') {
+        alert("스티커 합성 미리보기는 웹캠 모드에서만 가능합니다. 웹캠 모드로 전환합니다.");
+        switchMode('webcam'); 
     }
     
-    // 2. 기존 스티커 오버레이 제거
+    // 2. 웹캠이 켜져 있지 않거나(isRunning=false) 초기화되지 않았다면 시작
+    if (!isRunning) {
+        // startButton의 텍스트가 "Start Analysis" 또는 "Resume Analysis"일 때 실행
+        await toggleAnalysis();
+    }
+    
+    // 3. 기존 스티커 오버레이 제거
     removeStickerOverlay();
     
-    // 3. 스티커 오버레이 컨테이너 생성
+    // 4. 스티커 오버레이 컨테이너 생성
     const stickerOverlay = document.createElement('div');
     stickerOverlay.id = 'sticker-overlay';
     
-    // 4. 스티커 이미지 엘리먼트 생성
+    // 5. 스티커 이미지 엘리먼트 생성
     const stickerImage = document.createElement('img');
     stickerImage.src = stickerPath;
     stickerImage.alt = 'Hairstyle Sticker Overlay';
 
-    // 5. 스타일 적용 및 컨테이너에 추가
+    // 6. 스타일 적용 및 컨테이너에 추가
     stickerOverlay.appendChild(stickerImage);
     webcamContainer.appendChild(stickerOverlay);
     
-    // 6. 상태 메시지 업데이트
-    labelContainer.innerHTML = '<div style="color: #6a82fb; font-weight: bold; padding: 5px;">📸 합성 미리보기 모드 활성화: 얼굴을 스티커에 맞추세요!</div>';
+    // 7. 상태 메시지 업데이트
+    labelContainer.innerHTML = '<div style="color: #6a82fb; font-weight: bold; padding: 5px;">📸 합성 미리보기 모드 활성화: 얼굴을 스티커에 맞추세요! (분석 일시 정지 상태가 아닙니다)</div>';
 }
-
-// ----------------------------------------------------
-// 10. INITIAL SETUP
-// ----------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    init();
-    updateModelInfo();
-});
