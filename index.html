@@ -18,56 +18,56 @@
 </head>
 <body>
     <header>
-        <div class="header-content">
-            <h1>AI StyleMate</h1>
-            <p>Hair Style and Color Recommendation</p>
+        <div class="header-content-wrapper"> 
+            <div class="header-icons-left">
+                <img src="images/icon_cosmetic.png" alt="Cosmetic Icon" class="header-icon">
+                <img src="images/icon_hair.png" alt="Palette Icon" class="header-icon">
+            </div>
+            <div class="header-text-group">
+                <h1>AI StyleMate</h1>
+                <p class="subtitle">Hair Style and Color Recommendation based on Face Type and Personal Tone</p>
+            </div>
+            <div class="header-icons-right">
+                <img src="images/icon_color.png" alt="Comb Icon" class="header-icon">
+                <img src="images/icon_organic.png" alt="Organic Icon" class="header-icon">
+            </div>
         </div>
     </header>
 
     <div id="main-content">
-        <section id="input-source" class="card fade-in">
+        <section id="input-section" class="card fade-in">
             <h2><i class="fas fa-camera"></i> Input Source</h2>
             
-            <div class="source-toggle button-group">
-                <button class="btn mode-btn active" id="webcam-mode-btn" onclick="switchSource('webcam')">Webcam Mode</button>
-                <button class="btn mode-btn" id="image-mode-btn" onclick="switchSource('image')">Image Upload Mode</button>
-            </div>
-            
-            <div id="webcam-container" class="input-display">
-                <div class="webcam-placeholder">
-                    <p>Webcam Preview will appear here.</p>
-                </div>
-            </div>
-            
-            <div id="image-upload-container" class="input-display" style="display: none;">
-                <input type="file" id="image-upload" accept="image/*">
-                <div id="image-preview" class="webcam-placeholder" style="margin-top: 10px;">
-                    <img id="uploaded-image" style="display: none;">
-                    <p id="upload-placeholder-text">Upload an image to preview</p>
-                </div>
+            <div class="mode-select-group">
+                <button id="mode-webcam" class="btn mode-btn active">Webcam Mode</button>
+                <button id="mode-upload" class="btn mode-btn">Image Upload Mode</button>
             </div>
 
-            <div class="control-area">
-                <button class="btn primary-btn" id="toggle-analysis-btn" onclick="toggleAnalysis()">Start Analysis</button>
-                <button class="btn secondary-btn" id="process-image-btn" style="display: none;" onclick="analyzeImage()">Analyze Image</button>
+            <div id="webcam-container">
+                <p id="initial-message">Click "Start Analysis" to load webcam.</p>
             </div>
-            <p class="warning-text" id="face-warning" style="display: none;">⚠️ 경고: 얼굴이 명확하게 감지되지 않았습니다!</p>
-            <div id="status-message">Loading Teachable Machine models...</div>
+            
+            <div id="webcam-controls">
+                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
+            </div>
+
+            <div id="upload-controls" style="display: none;">
+                <input type="file" id="image-upload" accept="image/*" class="file-input">
+                <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
+            </div>
         </section>
 
-        <section id="model-selection" class="card fade-in">
-            <h2><i class="fas fa-brain"></i> Model Selection</h2>
-            
-            <p id="current-model-info">Active Model: **Face Type Analysis**</p>
-
-            <div class="model-toggle button-group">
-                <button class="btn model-btn active" id="model1-btn" onclick="handleModelChange(1)">Face Type Analysis</button>
-                <button class="btn model-btn" id="model2-btn" onclick="handleModelChange(2)">Personal Tone Analysis</button>
+        <section id="controls" class="card fade-in">
+            <h2><i class="fas fa-magic"></i> Model Selection</h2>
+            <p id="current-model-info">Active Model: **Not yet loaded**</p>
+            <div class="button-group">
+                <button id="model1-btn" class="btn model-select-btn">Face Type Analysis</button>
+                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis</button>
             </div>
             
-            <div id="face-selection-controls">
-                <h3><i class="fas fa-venus-mars"></i> Hair Style Guide</h3>
-                <p>Select a face shape for manual recommendation.</p>
+            <div id="style-selection-controls" style="display: none;">
+                <h3><i class="fas fa-scissors"></i> Hair Style Guide</h3>
+                <p>Select a face type to view recommendations.</p>
                 <div class="face-type-buttons button-group">
                     <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
                     <button class="btn face-select-btn" data-facetype="Round">Round</button>
@@ -101,27 +101,19 @@
                 <p>Select a model to begin the analysis or selection.</p>
             </div>
             
-        </section>
+            <div id="ar-container" style="display: none; margin-top: 30px; padding: 20px; border: 2px dashed #ADD8E6; border-radius: 10px; background-color: #f0f8ff;">
+                <h4 style="color: #6a82fb;"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
+                <p style="font-style: italic;">Adjust your head position to fit the sticker outline.</p>
+                <div id="ar-webcam-wrapper" style="position: relative; width: 400px; height: 300px; margin: 0 auto;">
+                    <video id="ar-webcam-video" autoplay playsinline style="width: 100%; height: 100%; border-radius: 10px;"></video>
+                    <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; pointer-events: none; display: none;">
+                </div>
+                <button id="ar-stop-button" class="btn secondary-btn" style="margin-top: 15px;">⏹️ Stop Try-On</button>
+            </div>
+            </section>
     </div>
 
-    <div id="try-on-modal" class="try-on-modal-container">
-        <div class="try-on-modal-content">
-            <span class="close-button" id="close-try-on-modal">&times;</span>
-            <h2><i class="fas fa-cut"></i> Virtual Hairstyle Try-On</h2>
-            
-            <div id="try-on-webcam-container">
-                <p>Loading virtual try-on...</p>
-            </div>
-
-            <img id="sticker-overlay-img" src="" alt="Hairstyle Sticker" class="sticker-overlay">
-
-            <div id="try-on-info">
-                <h3 id="try-on-style-name"></h3>
-                <p>Please align your face with the displayed hairstyle to try it on.</p>
-            </div>
-        </div>
-    </div>
-    
     <script src="script.js"></script>
 </body>
+
 </html>
