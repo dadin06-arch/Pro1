@@ -583,8 +583,23 @@ hr {
     pointer-events: none; /* 클릭 방지 */
 }
 
+/* 🌟 새로 추가된 AR 컨트롤 그룹 스타일 */
+.ar-controls-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px; 
+    margin-top: 20px; 
+    width: 100%;
+}
+
+#ar-screenshot-btn {
+    /* primary-btn의 기본 그라데이션 대신 다른 색상으로 강조 */
+    background: linear-gradient(to right, #FFC0CB, #ADD8E6); 
+    color: var(--main-text-color);
+    font-weight: 700;
+}
+
 #ar-stop-button {
-    margin-top: 20px;
     padding: 10px 30px;
 }
 
@@ -621,3 +636,15 @@ hr {
     }
     .tone-text-column {
         width: 100%;
+    }
+    
+    /* AR 버튼 반응형 */
+    .ar-controls-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .ar-controls-group button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
