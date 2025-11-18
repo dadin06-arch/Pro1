@@ -397,8 +397,8 @@ async function predict(modelToUse, modelName, element) {
     const predictions = await faceDetectorModel.estimateFaces(element, FACE_DETECTION_THRESHOLD);
 
     if (predictions.length === 0) {
-        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴이 명확하게 감지되지 않았습니다!</div><p>분석을 진행하려면 얼굴이 정면으로 잘 보이고, 충분히 밝으며, 가려지지 않았는지 확인해 주세요.</p>';
-        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 명확한 얼굴을 감지할 수 없습니다.</p>';
+        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ Warning: A clear face was not detected!</div><p>Please make sure your face is facing the camera, well-lit, unobstructed, and fully visible before continuing the analysis.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: A clear face could not be detected.</p>';
         
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
@@ -411,8 +411,8 @@ async function predict(modelToUse, modelName, element) {
     const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
 
     if (faceWidth < MIN_FACE_SIZE || faceHeight < MIN_FACE_SIZE) {
-        labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴 크기가 너무 작습니다!</div><p>카메라에 더 가까이 다가가거나, 사진에서 얼굴이 더 크게 보이도록 해 주세요.</p>';
-        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 얼굴 크기가 너무 작습니다.</p>';
+        labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ Warning: Your face appears too small!</div><p>Please move closer to the camera or adjust the image so your face appears larger.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: The face is too small.</p>';
         
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
@@ -469,13 +469,13 @@ function showRecommendation(faceType) {
                 <div class="style-column">
                     <h5><i class="fas fa-cut"></i> Short Hair: ${data.short}</h5>
                     <img src="${data.shortImage}" alt="${faceType} Short Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.shortSticker}" data-face="${faceType}" data-length="short">합성 체험 (Short)</button>
+                    <button class="btn ar-try-on-btn" data-sticker="${data.shortSticker}" data-face="${faceType}" data-length="short">AR sticker photo experience (Short)</button>
                 </div>
                 
                 <div class="style-column">
                     <h5><i class="fas fa-spa"></i> Long Hair: ${data.long}</h5>
                     <img src="${data.longImage}" alt="${faceType} Long Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.longSticker}" data-face="${faceType}" data-length="long">합성 체험 (Long)</button>
+                    <button class="btn ar-try-on-btn" data-sticker="${data.longSticker}" data-face="${faceType}" data-length="long">AR sticker photo experience (Long)</button>
                 </div>
             </div>
         </div>
@@ -596,7 +596,7 @@ async function startArTryOn(stickerPath) {
         
     } catch (err) {
         console.error("AR Webcam activation error: ", err);
-        arContainer.innerHTML = '<p style="color:red;">⚠️ AR 체험에 필요한 웹캠을 활성화할 수 없습니다. 카메라 권한을 확인해 주세요.</p>';
+        arContainer.innerHTML = '<p style="color:red;">⚠️ Unable to activate the webcam required for the AR experience. Please check your camera permissions.</p>';
         stopArTryOn();
     }
 }
@@ -688,3 +688,4 @@ function captureArScreenshot() {
         canvas.remove();
     }
 }
+
