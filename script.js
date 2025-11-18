@@ -20,6 +20,8 @@ let arWebcamStream = null;
 const arWebcamVideo = document.getElementById("ar-webcam-video");
 const arStickerOverlay = document.getElementById("ar-sticker-overlay");
 const arContainer = document.getElementById("ar-container");
+// 🌟 스크린샷 버튼 DOM 요소 추가
+const arScreenshotBtn = document.getElementById("ar-screenshot-btn");
 
 
 // 💡 얼굴 감지 임계값 (필요 시 조정 가능)
@@ -141,6 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // 💡 AR Stop Button Listener
     document.getElementById("ar-stop-button").addEventListener('click', stopArTryOn);
+    
+    // 🌟 AR Screenshot Button Listener 등록
+    if (arScreenshotBtn) {
+        arScreenshotBtn.addEventListener('click', captureArScreenshot);
+    }
     
     switchMode('webcam');
     
@@ -550,7 +557,7 @@ function updateModelInfo() {
 
 
 // ===============================================
-// 9. AR Try-On Logic (새로 추가된 핵심 기능)
+// 9. AR Try-On Logic (기존 핵심 기능)
 // ===============================================
 
 // AR 웹캠 활성화 및 스티커 오버레이
@@ -584,8 +591,7 @@ async function startArTryOn(stickerPath) {
         arWebcamVideo.srcObject = arWebcamStream;
         arWebcamVideo.play();
         
-        // 거울 효과를 위해 비디오 플립 (CSS에서 처리할 수도 있지만 JS로 처리)
-        // index.html 인라인 스타일에서 이미 flip 처리를 가정함.
+        // 거울 효과를 위해 비디오 플립 (CSS에서 처리)
         arWebcamVideo.style.transform = 'scaleX(-1)';
         
     } catch (err) {
@@ -612,4 +618,73 @@ function stopArTryOn() {
     arContainer.style.display = 'none';
     arStickerOverlay.style.display = 'none';
     arStickerOverlay.src = "";
+}
+
+
+// ===============================================
+// 10. AR Screenshot Logic (새로 추가된 기능)
+// ===============================================
+
+// 다운로드 처리 도우미 함수
+function triggerDownload(canvas) {
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'AI_StyleMate_AR_Screenshot_' + new Date().toISOString().slice(0, 10) + '.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // canvas.remove(); // 캔버스 제거는 호출 측에서 처리
+}
+
+function captureArScreenshot() {
+    if (!arWebcamVideo || arWebcamVideo.paused || arWebcamVideo.ended || arContainer.style.display === 'none') {
+        alert('AR 웹캠이 실행 중이지 않습니다.');
+        return;
+    }
+
+    // 1. 캔버스 생성 및 크기 설정
+    const canvas = document.createElement('canvas');
+    // 비디오의 실제 해상도(400x300)를 사용
+    const videoWidth = arWebcamVideo.videoWidth; 
+    const videoHeight = arWebcamVideo.videoHeight;
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    const ctx = canvas.getContext('2d');
+
+    // 2. 웹캠 비디오 그리기 (거울 효과 적용)
+    // 웹캠 비디오는 CSS transform: scaleX(-1)로 좌우 반전되어 있으므로, 캔버스에도 동일하게 적용해야 합니다.
+    ctx.save(); // 현재 캔버스 상태 저장
+    ctx.translate(videoWidth, 0); // x축 이동
+    ctx.scale(-1, 1); // 좌우 반전
+    ctx.drawImage(arWebcamVideo, 0, 0, videoWidth, videoHeight);
+    ctx.restore(); // 변환 상태 초기화
+
+    // 3. 스티커 이미지 그리기
+    if (arStickerOverlay.style.display !== 'none' && arStickerOverlay.src) {
+        const stickerImg = new Image();
+        stickerImg.crossOrigin = "anonymous"; // CORS 문제 방지
+        
+        stickerImg.onload = () => {
+            // AR 스티커의 현재 CSS 위치와 크기(px)를 가져와서 캔버스에 그릴 좌표로 사용합니다.
+            const stickerComputedStyle = window.getComputedStyle(arStickerOverlay);
+            const drawX = parseFloat(stickerComputedStyle.left);
+            const drawY = parseFloat(stickerComputedStyle.top);
+            const drawWidth = parseFloat(stickerComputedStyle.width);
+            const drawHeight = parseFloat(stickerComputedStyle.height);
+            
+            // 스티커 이미지를 그립니다. 스티커는 반전되지 않아야 합니다.
+            // 캔버스의 변환이 초기화된 상태이므로 CSS와 동일한 좌표에 그릴 수 있습니다.
+            ctx.drawImage(stickerImg, drawX, drawY, drawWidth, drawHeight);
+
+            // 4. 다운로드 실행
+            triggerDownload(canvas);
+            canvas.remove();
+        };
+        stickerImg.src = arStickerOverlay.src;
+    } else {
+        // 스티커가 없는 경우 비디오만 다운로드
+        triggerDownload(canvas);
+        canvas.remove();
+    }
 }
