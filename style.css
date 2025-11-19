@@ -442,18 +442,19 @@ hr {
 }
 
 
-/* 💡 AR 합성 체험 버튼 스타일 (수정됨: 가로로 길게) */
+/* 💡 AR 합성 체험 버튼 스타일 */
 .ar-try-on-btn {
     background: linear-gradient(to right, #00BFFF, #3CB371); /* 밝은 파랑/초록 계열 */
     color: white;
-    padding: 10px 15px; /* 패딩을 약간 키움 */
-    font-size: 1.0em; /* 글자 크기 키움 */
-    border-radius: 30px; /* 더 둥근 모서리 */
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border-radius: 20px;
     margin-top: 5px; 
-    box-shadow: 0 4px 8px rgba(0, 191, 255, 0.4);
-    width: 100%; /* 가로로 길게 */
-    max-width: none; /* 최대 너비 제한 해제 */
+    box-shadow: 0 3px 6px rgba(0, 191, 255, 0.3);
+    /* width: 100%; <--- 요청에 따라 제거 */
+    max-width: 250px; /* 요청에 따라 너비 제한 줄여서 텍스트 길이 반영 */
     transition: all 0.2s ease;
+    display: inline-block; /* 너비가 텍스트에 맞게 줄어들도록 변경 */
 }
 
 .ar-try-on-btn:hover {
@@ -472,21 +473,21 @@ hr {
     margin-top: 15px;
 }
 
-/* 이미지 영역 (150px 사각형) - 수정됨 */
+/* 이미지 영역 (150px 원형) */
 .tone-image-column {
-    flex: 0 0 150px; 
+    flex: 0 0 200px; /* 이미지 너비에 맞춰 크기 조정 */
     display: flex;
     justify-content: center;
-    align-items: flex-start; 
+    align-items: center; /* 💡 요청: 이미지 위치 중앙 정렬 */
 }
 
 .tone-image-column img {
-    /* 톤 이미지 크기 고정 및 사각형 (border-radius: 50% 제거) - 수정됨 */
-    width: 150px !important; 
-    height: 150px !important; 
-    max-width: 150px !important;
+    /* 💡 요청: 톤 이미지 크기 800x481 비율에 맞게 조정 (예: 200px x 120.25px) */
+    width: 200px !important; 
+    height: 120.25px !important; /* 481/800 * 200 = 120.25 */
+    max-width: 200px !important;
     object-fit: cover; 
-    border-radius: 6px; /* 사각형에 약간의 둥근 모서리 적용 */
+    border-radius: 50%; 
     border: 3px solid #FFC0CB;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
@@ -561,15 +562,18 @@ hr {
     margin: 0 auto;
     border-radius: 10px;
     overflow: hidden; /* 오버레이/비디오 경계 정리 */
+    /* 💡 요청: AR 웹캠 wrapper에 테두리 추가 (4변에 모두 적용) */
+    border: 4px solid #6a82fb;
+    box-shadow: 0 0 10px rgba(106, 130, 251, 0.5);
 }
 
 #ar-webcam-video {
     width: 100%; 
     height: 100%; 
     object-fit: cover; 
-    border-radius: 10px;
+    border-radius: 0; /* 테두리는 wrapper에 적용했으므로 비디오 테두리 제거 */
     transform: scaleX(-1); /* 거울 효과 */
-    border: 4px solid #6a82fb;
+    border: none; /* 💡 요청: 비디오 자체의 테두리 제거 */
 }
 
 #ar-sticker-overlay {
@@ -615,11 +619,17 @@ hr {
         flex: 0 0 auto;
     }
     .tone-image-column img {
-        width: 120px !important; 
-        height: 120px !important; 
-        max-width: 120px !important;
-        /* 원형 -> 사각형으로 변경했으므로, 이 크기 설정은 유지 */
+        /* 모바일 환경에서 톤 이미지 크기 축소 */
+        width: 150px !important; 
+        height: 90.1875px !important; /* 481/800 * 150 = 90.1875 */
+        max-width: 150px !important;
     }
     .tone-text-column {
         width: 100%;
+    }
+    
+    #ar-webcam-wrapper {
+        width: 300px; 
+        height: 225px; 
+    }
 }
