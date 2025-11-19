@@ -442,23 +442,56 @@ hr {
 }
 
 
+/* 💡 AR 합성 체험 버튼 스타일 (수정됨: 가로로 길게) */
+
 /* 💡 AR 합성 체험 버튼 스타일 */
+
 .ar-try-on-btn {
+
     background: linear-gradient(to right, #00BFFF, #3CB371); /* 밝은 파랑/초록 계열 */
+
     color: white;
+
+    padding: 10px 15px; /* 패딩을 약간 키움 */
+
+    font-size: 1.0em; /* 글자 크기 키움 */
+
+    border-radius: 30px; /* 더 둥근 모서리 */
+
     padding: 8px 15px;
+
     font-size: 0.9em;
+
     border-radius: 20px;
+
     margin-top: 5px; 
+
+    box-shadow: 0 4px 8px rgba(0, 191, 255, 0.4);
+
+    width: 100%; /* 가로로 길게 */
+
+    max-width: none; /* 최대 너비 제한 해제 */
+
     box-shadow: 0 3px 6px rgba(0, 191, 255, 0.3);
-    width: 100%;
-    max-width: 180px; 
+
+    /* width: 100%; <--- 요청에 따라 제거 */
+
+    max-width: 250px; /* 요청에 따라 너비 제한 줄여서 텍스트 길이 반영 */
+
     transition: all 0.2s ease;
+
+    display: inline-block; /* 너비가 텍스트에 맞게 줄어들도록 변경 */
+
 }
 
+
+
 .ar-try-on-btn:hover {
-    background: linear-gradient(to right, #1E90FF, #2E8B57);
-    transform: translateY(-2px);
+
+@@ -472,21 +473,21 @@ hr {
+
+    margin-top: 15px;
+
 }
 
 
@@ -629,3 +662,4 @@ hr {
         width: 100%;
     }
 }
+
