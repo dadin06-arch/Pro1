@@ -34,18 +34,6 @@
         </div>
     </header>
 
-    <div id="consent-modal" class="modal">
-        <div class="modal-content">
-            <h3><i class="fas fa-user-shield"></i> 초상권 및 개인정보 수집 동의</h3>
-            <p>본 서비스는 AI 얼굴 분석을 위해 사용자의 **웹캠 영상 또는 업로드된 사진**을 사용합니다. 분석 과정에서 얼굴의 특징점(눈, 코, 입, 윤곽) 정보만 일시적으로 사용되며, 해당 데이터는 **분석 후 즉시 파기**됩니다.</p>
-            <p><strong>수집되는 이미지 데이터는 서버에 저장되지 않으며, 오직 분석 목적으로만 사용됩니다.</strong></p>
-            <p>분석을 시작하기 전에 **초상권 및 개인정보 수집 이용에 동의**해 주시기 바랍니다.</p>
-            <div class="modal-buttons">
-                <button id="consent-agree-btn" class="btn primary-btn">✅ 동의하고 분석 시작</button>
-                <button id="consent-cancel-btn" class="btn secondary-btn">❌ 취소</button>
-            </div>
-        </div>
-    </div>
     <div id="main-content">
         <section id="input-section" class="card fade-in">
             <h2><i class="fas fa-camera"></i> Input Source</h2>
@@ -60,27 +48,23 @@
             </div>
             
             <div id="webcam-controls">
-                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
+                <button id="start-button" class="btn primary-btn">▶️ Start Analysis</button>
             </div>
 
             <div id="upload-controls" style="display: none;">
-                <input type="file" id="image-upload" accept="image/*" class="file-input">
+                <input type="file" id="image-upload" accept="image/*">
                 <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
             </div>
-        </section>
-
-        <section id="controls" class="card fade-in">
-            <h2><i class="fas fa-magic"></i> Model Selection</h2>
-            <p id="current-model-info">Active Model: **Not yet loaded**</p>
+            
             <div class="button-group">
-                <button id="model1-btn" class="btn model-select-btn">Face Type Analysis</button>
+                <button id="model1-btn" class="btn model-select-btn active">Face Type Analysis</button>
                 <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis</button>
             </div>
+            <p id="current-model-info" style="font-style: italic; margin-top: 10px;"></p>
             
-            <div id="style-selection-controls" style="display: none;">
-                <h3><i class="fas fa-scissors"></i> Hair Style Guide</h3>
-                <p>Select a face type to view recommendations.</p>
-                <div class="face-type-buttons button-group">
+            <div id="style-selection-controls">
+                <h3>Hair Style Guide: Manual Selection</h3>
+                <div class="face-type-buttons">
                     <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
                     <button class="btn face-select-btn" data-facetype="Round">Round</button>
                     <button class="btn face-select-btn" data-facetype="Square">Square</button>
@@ -88,11 +72,10 @@
                     <button class="btn face-select-btn" data-facetype="Oblong">Oblong</button>
                 </div>
             </div>
-
-            <div id="tone-selection-controls" style="display: none;">
-                <h3><i class="fas fa-palette"></i> Personal Tone Guide</h3>
-                <p>Select a tone to view color recommendations.</p>
-                <div class="tone-type-buttons button-group">
+            
+            <div id="tone-selection-controls">
+                <h3>Personal Tone Guide: Manual Selection</h3>
+                <div class="tone-type-buttons">
                     <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
                     <button class="btn tone-select-btn" data-tonetype="Warm">Warm Tone</button>
                 </div>
@@ -107,6 +90,14 @@
                 <div id="label-container">Waiting for analysis...</div>
             </div>
             
+            <div id="feedback-container">
+                <p id="feedback-question">Are you satisfied with this analysis?</p>
+                <div class="feedback-buttons">
+                    <button id="feedback-like" class="btn primary-btn"><i class="fas fa-thumbs-up"></i> Like</button>
+                    <button id="feedback-dislike" class="btn secondary-btn"><i class="fas fa-thumbs-down"></i> Dislike</button>
+                </div>
+                <p id="feedback-message" style="display: none; margin-top: 10px; font-weight: bold; color: #4CAF50;">Thank you for your feedback!</p>
+            </div>
             <hr>
             
             <div id="recommendation-output">
@@ -120,7 +111,10 @@
                     <video id="ar-webcam-video" autoplay playsinline></video>
                     <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
                 </div>
-                <button id="ar-stop-button" class="btn secondary-btn">⏹️ Stop Try-On</button>
+                <div class="ar-controls-group">
+                    <button id="ar-screenshot-btn" class="btn primary-btn">📸 Screenshot</button>
+                    <button id="ar-stop-button" class="btn secondary-btn">⏹️ Stop Try-On</button>
+                </div>
             </div>
             
         </section>
@@ -128,5 +122,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>
