@@ -442,17 +442,17 @@ hr {
 }
 
 
-/* 💡 AR 합성 체험 버튼 스타일 */
+/* 💡 AR 합성 체험 버튼 스타일 (수정됨: 가로로 길게) */
 .ar-try-on-btn {
     background: linear-gradient(to right, #00BFFF, #3CB371); /* 밝은 파랑/초록 계열 */
     color: white;
-    padding: 8px 15px;
-    font-size: 0.9em;
-    border-radius: 20px;
+    padding: 10px 15px; /* 패딩을 약간 키움 */
+    font-size: 1.0em; /* 글자 크기 키움 */
+    border-radius: 30px; /* 더 둥근 모서리 */
     margin-top: 5px; 
-    box-shadow: 0 3px 6px rgba(0, 191, 255, 0.3);
-    width: 100%;
-    max-width: 180px; 
+    box-shadow: 0 4px 8px rgba(0, 191, 255, 0.4);
+    width: 100%; /* 가로로 길게 */
+    max-width: none; /* 최대 너비 제한 해제 */
     transition: all 0.2s ease;
 }
 
@@ -472,7 +472,7 @@ hr {
     margin-top: 15px;
 }
 
-/* 이미지 영역 (150px 원형) */
+/* 이미지 영역 (150px 사각형) - 수정됨 */
 .tone-image-column {
     flex: 0 0 150px; 
     display: flex;
@@ -481,12 +481,12 @@ hr {
 }
 
 .tone-image-column img {
-    /* 톤 이미지 크기 고정 및 원형 */
+    /* 톤 이미지 크기 고정 및 사각형 (border-radius: 50% 제거) - 수정됨 */
     width: 150px !important; 
     height: 150px !important; 
     max-width: 150px !important;
     object-fit: cover; 
-    border-radius: 50%; 
+    border-radius: 6px; /* 사각형에 약간의 둥근 모서리 적용 */
     border: 3px solid #FFC0CB;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
@@ -583,23 +583,8 @@ hr {
     pointer-events: none; /* 클릭 방지 */
 }
 
-/* 🌟 새로 추가된 AR 컨트롤 그룹 스타일 */
-.ar-controls-group {
-    display: flex;
-    justify-content: center;
-    gap: 15px; 
-    margin-top: 20px; 
-    width: 100%;
-}
-
-#ar-screenshot-btn {
-    /* primary-btn의 기본 그라데이션 대신 다른 색상으로 강조 */
-    background: linear-gradient(to right, #FFC0CB, #ADD8E6); 
-    color: var(--main-text-color);
-    font-weight: 700;
-}
-
 #ar-stop-button {
+    margin-top: 20px;
     padding: 10px 30px;
 }
 
@@ -633,18 +618,8 @@ hr {
         width: 120px !important; 
         height: 120px !important; 
         max-width: 120px !important;
+        /* 원형 -> 사각형으로 변경했으므로, 이 크기 설정은 유지 */
     }
     .tone-text-column {
         width: 100%;
-    }
-    
-    /* AR 버튼 반응형 */
-    .ar-controls-group {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .ar-controls-group button {
-        width: 100%;
-        max-width: 300px;
-    }
 }
