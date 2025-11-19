@@ -20,9 +20,12 @@ let arWebcamStream = null;
 const arWebcamVideo = document.getElementById("ar-webcam-video");
 const arStickerOverlay = document.getElementById("ar-sticker-overlay");
 const arContainer = document.getElementById("ar-container");
-// 🌟 스크린샷 버튼 DOM 요소 추가
-const arScreenshotBtn = document.getElementById("ar-screenshot-btn");
 
+// 💡 팝업 모달 관련 변수 추가
+const consentModal = document.getElementById("consent-modal");
+const consentAgreeBtn = document.getElementById("consent-agree-btn");
+const consentCancelBtn = document.getElementById("consent-cancel-btn");
+const startButton = document.getElementById("start-button"); // Start Analysis 버튼
 
 // 💡 얼굴 감지 임계값 (필요 시 조정 가능)
 const FACE_DETECTION_THRESHOLD = 0.9; // 얼굴 감지 신뢰도
@@ -106,7 +109,8 @@ const personalToneData = {
 // ===============================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("start-button").addEventListener("click", toggleAnalysis);
+    // 💡 변경: start-button 클릭 시 toggleAnalysis 대신 openConsentModal 호출
+    document.getElementById("start-button").addEventListener("click", openConsentModal);
     
     document.getElementById("model1-btn").addEventListener("click", () => handleModelChange(1));
     document.getElementById("model2-btn").addEventListener("click", () => handleModelChange(2));
@@ -144,10 +148,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // 💡 AR Stop Button Listener
     document.getElementById("ar-stop-button").addEventListener('click', stopArTryOn);
     
-    // 🌟 AR Screenshot Button Listener 등록
-    if (arScreenshotBtn) {
-        arScreenshotBtn.addEventListener('click', captureArScreenshot);
-    }
+    // 💡 모달 버튼 이벤트 리스너 추가
+    consentAgreeBtn.addEventListener('click', handleConsentAgree);
+    consentCancelBtn.addEventListener('click', handleConsentCancel);
     
     switchMode('webcam');
     
@@ -163,8 +166,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function switchMode(mode) {
     if (currentSource === mode) return;
 
+    // 💡 분석 실행 중이면 정지 후 모드 전환
     if (isRunning) {
-        toggleAnalysis(); 
+        stopPrediction(); 
     }
     
     // 💡 AR Try-On 정지
@@ -211,6 +215,22 @@ function switchMode(mode) {
 // 4. Initialization, Webcam Loop Control (toggleAnalysis)
 // ===============================================
 
+// 💡 헬퍼 함수: 현재 실행 중인 분석 루프를 정지하고 UI를 초기화합니다.
+function stopPrediction() {
+    if (isRunning) {
+        window.cancelAnimationFrame(requestID);
+        startButton.innerText = "▶️ Resume Analysis";
+        // 'primary-btn'을 'secondary-btn'으로 대체
+        startButton.classList.replace('primary-btn', 'secondary-btn');
+        isRunning = false;
+        if(webcam) {
+            webcam.pause();
+        }
+    }
+}
+
+
+// 💡 기존 toggleAnalysis 함수는 그대로 유지
 async function toggleAnalysis() {
     const startButton = document.getElementById("start-button");
     
@@ -240,7 +260,7 @@ async function toggleAnalysis() {
             const flip = true; 
             webcam = new tmImage.Webcam(400, 300, flip); 
             await webcam.setup(); 
-            await webcam.play();
+            // 웹캠은 play() 대신 pause() 상태로 시작하여 loop()에서 play() 되도록 수정
             
             document.getElementById("webcam-container").innerHTML = ''; 
             document.getElementById("webcam-container").appendChild(webcam.canvas);
@@ -312,6 +332,7 @@ function handleModelChange(newModel) {
         document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active'));
     }
     
+    // 💡 웹캠 모드에서 일시정지 상태이거나 이미지 모드인 경우 예측 실행
     if ((currentSource === 'webcam' && !isRunning && isInitialized) || currentSource === 'image') {
         const modelToUse = (currentModel === 1) ? model1 : model2;
         const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
@@ -397,8 +418,8 @@ async function predict(modelToUse, modelName, element) {
     const predictions = await faceDetectorModel.estimateFaces(element, FACE_DETECTION_THRESHOLD);
 
     if (predictions.length === 0) {
-        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ Warning: A clear face was not detected!</div><p>Please make sure your face is facing the camera, well-lit, unobstructed, and fully visible before continuing the analysis.</p>';
-        document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: A clear face could not be detected.</p>';
+        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴이 명확하게 감지되지 않았습니다!</div><p>분석을 진행하려면 얼굴이 정면으로 잘 보이고, 충분히 밝으며, 가려지지 않았는지 확인해 주세요.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 명확한 얼굴을 감지할 수 없습니다.</p>';
         
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
@@ -411,8 +432,8 @@ async function predict(modelToUse, modelName, element) {
     const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
 
     if (faceWidth < MIN_FACE_SIZE || faceHeight < MIN_FACE_SIZE) {
-        labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ Warning: Your face appears too small!</div><p>Please move closer to the camera or adjust the image so your face appears larger.</p>';
-        document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: The face is too small.</p>';
+        labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ 경고: 얼굴 크기가 너무 작습니다!</div><p>카메라에 더 가까이 다가가거나, 사진에서 얼굴이 더 크게 보이도록 해 주세요.</p>';
+        document.getElementById("recommendation-output").innerHTML = '<p>얼굴 인식 실패: 얼굴 크기가 너무 작습니다.</p>';
         
         document.getElementById("style-selection-controls").style.display = 'none';
         document.getElementById("tone-selection-controls").style.display = 'none';
@@ -469,13 +490,13 @@ function showRecommendation(faceType) {
                 <div class="style-column">
                     <h5><i class="fas fa-cut"></i> Short Hair: ${data.short}</h5>
                     <img src="${data.shortImage}" alt="${faceType} Short Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.shortSticker}" data-face="${faceType}" data-length="short">AR sticker photo experience (Short)</button>
+                    <button class="btn ar-try-on-btn" data-sticker="${data.shortSticker}" data-face="${faceType}" data-length="short">합성 체험 (Short)</button>
                 </div>
                 
                 <div class="style-column">
                     <h5><i class="fas fa-spa"></i> Long Hair: ${data.long}</h5>
                     <img src="${data.longImage}" alt="${faceType} Long Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.longSticker}" data-face="${faceType}" data-length="long">AR sticker photo experience (Long)</button>
+                    <button class="btn ar-try-on-btn" data-sticker="${data.longSticker}" data-face="${faceType}" data-length="long">합성 체험 (Long)</button>
                 </div>
             </div>
         </div>
@@ -511,6 +532,9 @@ function showToneRecommendation(toneType) {
             <p class="summary-text">${data.summary}</p>
             
             <div class="tone-styles-container">
+                <div class="tone-image-column">
+                    <img src="${data.image}" alt="${toneType} Color Palette">
+                </div>
                 <div class="tone-text-column">
                     <div class="tone-category">
                         <h5><i class="fas fa-cut"></i> Hair Colors</h5>
@@ -524,9 +548,6 @@ function showToneRecommendation(toneType) {
                         <h5><i class="fas fa-gem"></i> Makeup Colors</h5>
                         <p>${data.makeup}</p>
                     </div>
-                </div>
-                <div class="tone-image-column">
-                    <img src="${data.image}" alt="${toneType} Color Palette">
                 </div>
             </div>
         </div>
@@ -557,7 +578,7 @@ function updateModelInfo() {
 
 
 // ===============================================
-// 9. AR Try-On Logic (기존 핵심 기능)
+// 9. AR Try-On Logic (새로 추가된 핵심 기능)
 // ===============================================
 
 // AR 웹캠 활성화 및 스티커 오버레이
@@ -591,12 +612,13 @@ async function startArTryOn(stickerPath) {
         arWebcamVideo.srcObject = arWebcamStream;
         arWebcamVideo.play();
         
-        // 거울 효과를 위해 비디오 플립 (CSS에서 처리)
+        // 거울 효과를 위해 비디오 플립 (CSS에서 처리할 수도 있지만 JS로 처리)
+        // index.html 인라인 스타일에서 이미 flip 처리를 가정함.
         arWebcamVideo.style.transform = 'scaleX(-1)';
         
     } catch (err) {
         console.error("AR Webcam activation error: ", err);
-        arContainer.innerHTML = '<p style="color:red;">⚠️ Unable to activate the webcam required for the AR experience. Please check your camera permissions.</p>';
+        arContainer.innerHTML = '<p style="color:red;">⚠️ AR 체험에 필요한 웹캠을 활성화할 수 없습니다. 카메라 권한을 확인해 주세요.</p>';
         stopArTryOn();
     }
 }
@@ -622,70 +644,48 @@ function stopArTryOn() {
 
 
 // ===============================================
-// 10. AR Screenshot Logic (새로 추가된 기능)
+// 10. MODAL/CONSENT HANDLING LOGIC (새로 추가된 팝업 로직)
 // ===============================================
 
-// 다운로드 처리 도우미 함수
-function triggerDownload(canvas) {
-    const dataURL = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = dataURL;
-    link.download = 'AI_StyleMate_AR_Screenshot_' + new Date().toISOString().slice(0, 10) + '.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    // canvas.remove(); // 캔버스 제거는 호출 측에서 처리
+/**
+ * Start Analysis 버튼 클릭 시 모달 팝업을 띄우는 함수.
+ */
+function openConsentModal() {
+    // 분석 시작 전 실행 중인 것이 있다면 모두 정지 (Resume 상태를 방지)
+    stopPrediction();
+    stopArTryOn();
+    
+    // 모달을 보이게 함 (CSS의 .active 클래스 이용)
+    consentModal.classList.add('active');
 }
 
-function captureArScreenshot() {
-    if (!arWebcamVideo || arWebcamVideo.paused || arWebcamVideo.ended || arContainer.style.display === 'none') {
-        alert('AR 웹캠이 실행 중이지 않습니다.');
+/**
+ * 모달을 닫는 함수.
+ */
+function closeConsentModal() {
+    // 모달을 숨김
+    consentModal.classList.remove('active');
+}
+
+/**
+ * 동의 후 분석을 시작하는 함수.
+ */
+async function handleConsentAgree() {
+    closeConsentModal();
+    
+    if (currentModel === 0) {
+        alert("분석을 시작하려면 먼저 얼굴형 또는 퍼스널 톤 모델을 선택해주세요.");
         return;
     }
-
-    // 1. 캔버스 생성 및 크기 설정
-    const canvas = document.createElement('canvas');
-    // 비디오의 실제 해상도(400x300)를 사용
-    const videoWidth = arWebcamVideo.videoWidth; 
-    const videoHeight = arWebcamVideo.videoHeight;
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    // 2. 웹캠 비디오 그리기 (거울 효과 적용)
-    // 웹캠 비디오는 CSS transform: scaleX(-1)로 좌우 반전되어 있으므로, 캔버스에도 동일하게 적용해야 합니다.
-    ctx.save(); // 현재 캔버스 상태 저장
-    ctx.translate(videoWidth, 0); // x축 이동
-    ctx.scale(-1, 1); // 좌우 반전
-    ctx.drawImage(arWebcamVideo, 0, 0, videoWidth, videoHeight);
-    ctx.restore(); // 변환 상태 초기화
-
-    // 3. 스티커 이미지 그리기
-    if (arStickerOverlay.style.display !== 'none' && arStickerOverlay.src) {
-        const stickerImg = new Image();
-        stickerImg.crossOrigin = "anonymous"; // CORS 문제 방지
-        
-        stickerImg.onload = () => {
-            // AR 스티커의 현재 CSS 위치와 크기(px)를 가져와서 캔버스에 그릴 좌표로 사용합니다.
-            const stickerComputedStyle = window.getComputedStyle(arStickerOverlay);
-            const drawX = parseFloat(stickerComputedStyle.left);
-            const drawY = parseFloat(stickerComputedStyle.top);
-            const drawWidth = parseFloat(stickerComputedStyle.width);
-            const drawHeight = parseFloat(stickerComputedStyle.height);
-            
-            // 스티커 이미지를 그립니다. 스티커는 반전되지 않아야 합니다.
-            // 캔버스의 변환이 초기화된 상태이므로 CSS와 동일한 좌표에 그릴 수 있습니다.
-            ctx.drawImage(stickerImg, drawX, drawY, drawWidth, drawHeight);
-
-            // 4. 다운로드 실행
-            triggerDownload(canvas);
-            canvas.remove();
-        };
-        stickerImg.src = arStickerOverlay.src;
-    } else {
-        // 스티커가 없는 경우 비디오만 다운로드
-        triggerDownload(canvas);
-        canvas.remove();
-    }
+    
+    // 팝업을 닫고 원래 분석 시작/재개 함수 호출
+    await toggleAnalysis(); 
 }
 
+/**
+ * 취소 버튼 클릭 시 실행되는 함수.
+ */
+function handleConsentCancel() {
+    closeConsentModal();
+    alert("초상권 동의가 취소되어 분석을 시작할 수 없습니다.");
+}
