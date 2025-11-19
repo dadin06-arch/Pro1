@@ -503,24 +503,15 @@ hr {
     gap: 20px;
     align-items: flex-start; 
     margin-top: 15px;
-    /* 💡 텍스트가 왼쪽, 이미지가 오른쪽으로 오게 하려면 정렬을 시작(start)으로 유지하는 것이 좋습니다. */
-}
-
-/* 텍스트 영역 */
-.tone-text-column {
-    flex: 1; 
-    text-align: left;
-    /* 💡 이미지보다 먼저 오도록 순서 조정 (HTML에서 텍스트가 먼저 오도록 변경이 필요할 수 있지만, CSS만 수정 요청이므로 Flexbox의 순서 조정은 사용하지 않음) */
 }
 
 /* 이미지 영역 (200px 사각형) */
 .tone-image-column {
-    /* 💡 수정: 텍스트 영역 옆에 적절히 배치되도록 너비 고정 */
-    flex: 0 0 200px; 
+    flex: 0 0 200px; /* 이미지 너비에 맞춰 크기 조정 */
     display: flex;
-    /* 💡 수정: 이미지 컨테이너 내부의 이미지를 중앙에 배치하여 왼쪽 정렬의 균형을 맞춤 */
-    justify-content: center; 
-    align-items: center; 
+    justify-content: center;
+    /* 💡 요청: 이미지가 너무 오른쪽으로 뜨지 않도록 중앙에 가깝게 조정 */
+    align-items: center; /* 수직 중앙 정렬 유지 */
 }
 
 .tone-image-column img {
@@ -533,6 +524,12 @@ hr {
     border: 3px solid #FFC0CB;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
+}
+
+/* 텍스트 영역 */
+.tone-text-column {
+    flex: 1; 
+    text-align: left;
 }
 
 .tone-category {
@@ -598,15 +595,18 @@ hr {
     margin: 0 auto;
     border-radius: 10px;
     overflow: hidden; /* 오버레이/비디오 경계 정리 */
+    /* 💡 요청: AR 웹캠 wrapper에 테두리 추가 */
+    border: 4px solid #6a82fb;
+    box-shadow: 0 0 10px rgba(106, 130, 251, 0.5);
 }
 
 #ar-webcam-video {
     width: 100%; 
     height: 100%; 
     object-fit: cover; 
-    border-radius: 10px;
+    border-radius: 0; /* 테두리는 wrapper에 적용했으므로 비디오 테두리 제거 */
     transform: scaleX(-1); /* 거울 효과 */
-    border: 4px solid #6a82fb;
+    border: none; 
 }
 
 #ar-sticker-overlay {
@@ -652,13 +652,18 @@ hr {
         flex: 0 0 auto;
     }
     .tone-image-column img {
-        /* 모바일 환경에서도 사각형 및 비율 유지 */
+        /* 모바일 환경에서 톤 이미지 크기 축소 */
         width: 150px !important; 
         height: 90.1875px !important; /* 481/800 * 150 = 90.1875 */
         max-width: 150px !important;
-        border-radius: 6px; 
+        border-radius: 6px; /* 모바일에서도 사각형 유지 */
     }
     .tone-text-column {
         width: 100%;
+    }
+    
+    #ar-webcam-wrapper {
+        width: 300px; 
+        height: 225px; 
     }
 }
