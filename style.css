@@ -503,36 +503,38 @@ hr {
     gap: 20px;
     align-items: flex-start; 
     margin-top: 15px;
-    /* 💡 텍스트가 왼쪽, 이미지가 오른쪽으로 오게 하려면 정렬을 시작(start)으로 유지하는 것이 좋습니다. */
-}
-
-/* 텍스트 영역 */
-.tone-text-column {
-    flex: 1; 
-    text-align: left;
-    /* 💡 이미지보다 먼저 오도록 순서 조정 (HTML에서 텍스트가 먼저 오도록 변경이 필요할 수 있지만, CSS만 수정 요청이므로 Flexbox의 순서 조정은 사용하지 않음) */
 }
 
 /* 이미지 영역 (200px 사각형) */
 .tone-image-column {
-    /* 💡 수정: 텍스트 영역 옆에 적절히 배치되도록 너비 고정 */
-    flex: 0 0 200px; 
+    /* 💡 수정: 이미지가 맨 왼쪽에 오도록 order를 낮게 설정 */
+    order: -1; 
+    
+    flex: 0 0 200px; /* 이미지 너비 고정 */
     display: flex;
-    /* 💡 수정: 이미지 컨테이너 내부의 이미지를 중앙에 배치하여 왼쪽 정렬의 균형을 맞춤 */
-    justify-content: center; 
+    justify-content: flex-start; /* 💡 수정: 이미지가 컨테이너 내에서 왼쪽으로 정렬되도록 변경 */
     align-items: center; 
 }
 
 .tone-image-column img {
     /* 💡 요청: 톤 이미지 크기 800x481 비율 (200px x 120.25px) 및 사각형으로 조정 */
     width: 200px !important; 
-    height: 120.25px !important; /* 481/800 * 200 = 120.25 */
+    height: 120.25px !important; 
     max-width: 200px !important;
     object-fit: cover; 
-    border-radius: 6px; /* 💡 요청: 사각형으로 변경 (50% 제거, 6px 둥근 모서리) */
+    border-radius: 6px; 
     border: 3px solid #FFC0CB;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
+}
+
+/* 텍스트 영역 */
+.tone-text-column {
+    /* 💡 수정: 이미지보다 뒤에 나타나도록 order를 높게 설정 */
+    order: 1; 
+    
+    flex: 1; 
+    text-align: left;
 }
 
 .tone-category {
@@ -598,15 +600,18 @@ hr {
     margin: 0 auto;
     border-radius: 10px;
     overflow: hidden; /* 오버레이/비디오 경계 정리 */
+    /* AR 웹캠 wrapper에 테두리 추가 */
+    border: 4px solid #6a82fb;
+    box-shadow: 0 0 10px rgba(106, 130, 251, 0.5);
 }
 
 #ar-webcam-video {
     width: 100%; 
     height: 100%; 
     object-fit: cover; 
-    border-radius: 10px;
+    border-radius: 0; /* 테두리는 wrapper에 적용했으므로 비디오 테두리 제거 */
     transform: scaleX(-1); /* 거울 효과 */
-    border: 4px solid #6a82fb;
+    border: none;
 }
 
 #ar-sticker-overlay {
@@ -648,8 +653,11 @@ hr {
         align-items: center;
     }
     .tone-image-column {
+        /* 모바일에서 이미지와 텍스트를 위아래로 배치 (이미지가 위) */
+        order: -1; 
         margin-bottom: 15px;
         flex: 0 0 auto;
+        justify-content: center; /* 모바일에서 중앙 정렬 */
     }
     .tone-image-column img {
         /* 모바일 환경에서도 사각형 및 비율 유지 */
@@ -659,7 +667,12 @@ hr {
         border-radius: 6px; 
     }
     .tone-text-column {
+        order: 1;
         width: 100%;
     }
+    
+    #ar-webcam-wrapper {
+        width: 300px; 
+        height: 225px; 
+    }
 }
-
