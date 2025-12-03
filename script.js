@@ -20,6 +20,9 @@ let arWebcamStream = null;
 const arWebcamVideo = document.getElementById("ar-webcam-video");
 const arStickerOverlay = document.getElementById("ar-sticker-overlay");
 const arContainer = document.getElementById("ar-container");
+// 💡 AR 컬러 변경 관련 변수 추가
+let currentStickerBaseName = ''; // 현재 스타일의 기본 이름 (예: oval_long)
+let currentStickerLength = ''; // 현재 스타일의 길이 (예: short 또는 long)
 // 🌟 스크린샷 버튼 DOM 요소 추가
 const arScreenshotBtn = document.getElementById("ar-screenshot-btn");
 
@@ -106,7 +109,8 @@ const personalToneData = {
 // ===============================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("start-button").addEventListener("click", toggleAnalysis);
+    // 💡 [수정] 'Start Analysis' 버튼 클릭 시 toggleAnalysis 대신 showConsentModalForWebcam 호출
+    document.getElementById("start-button").addEventListener("click", showConsentModalForWebcam);
     
     document.getElementById("model1-btn").addEventListener("click", () => handleModelChange(1));
     document.getElementById("model2-btn").addEventListener("click", () => handleModelChange(2));
@@ -115,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("mode-upload").addEventListener("click", () => switchMode('image'));
 
     document.getElementById("image-upload").addEventListener("change", handleImageUpload);
+    // 💡 [참고] Upload 모드 시작 버튼은 기존 로직 유지 (파일 선택 완료 후 바로 분석 시작 가능)
     document.getElementById("process-image-btn").addEventListener("click", processUploadedImage);
     
     document.querySelectorAll('.face-select-btn').forEach(button => {
@@ -129,6 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // 💡 컬러 선택 버튼 리스너 추가
+    document.getElementById("color-original-btn").addEventListener("click", () => changeStickerColor("original"));
+    document.getElementById("color-warm-btn").addEventListener("click", () => changeStickerColor("warm"));
+    document.getElementById("color-cool-btn").addEventListener("click", () => changeStickerColor("cool"));
+    
     document.querySelectorAll('.tone-select-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active')); 
@@ -149,32 +159,73 @@ document.addEventListener("DOMContentLoaded", () => {
         arScreenshotBtn.addEventListener('click', captureArScreenshot);
     }
     
-    // 💡 분석 피드백 버튼 이벤트 리스너 추가 (새로 추가된 부분)
-    const feedbackMessage = document.getElementById("feedback-message");
-    const feedbackButtons = document.querySelectorAll('#feedback-container .feedback-buttons button');
+    // 💡 (추가) 초상권 동의 모달 이벤트 리스너
+    const consentModal = document.getElementById('consent-modal');
+    const consentAgreeBtn = document.getElementById('consent-agree-btn');
+    const consentCancelBtn = document.getElementById('consent-cancel-btn');
+    // 팝업 내의 X 버튼을 정확히 선택
+    const closeModalSpan = document.querySelector('#consent-modal .close-btn');
     
-    feedbackButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            // 버튼 비활성화 (중복 클릭 방지)
-            feedbackButtons.forEach(btn => btn.disabled = true);
-            
-            // 메시지 표시 ("Thank you for your feedback!")
-            feedbackMessage.style.display = 'block';
-            
-            // 2초 후 메시지 숨김 및 버튼 재활성화 (피드백은 한 번만 받도록 재활성화는 주석 처리)
-            setTimeout(() => {
-                feedbackMessage.style.display = 'none';
-                // feedbackButtons.forEach(btn => btn.disabled = false); 
-            }, 2000); 
+    if (consentModal) {
+        // '동의 및 분석 시작' 버튼 클릭 이벤트
+        consentAgreeBtn.addEventListener('click', handleConsentAndStartAnalysis);
+        
+        // '취소' 버튼 클릭 이벤트
+        consentCancelBtn.addEventListener('click', () => {
+            consentModal.style.display = 'none';
+            // 취소 시 사용자에게 알림 (선택 사항)
+            // alert('분석이 취소되었습니다. 초상권 동의를 하셔야 분석을 진행할 수 있습니다.');
         });
-    });
+        
+        // 팝업의 X 버튼 클릭 이벤트
+        closeModalSpan.addEventListener('click', () => {
+            consentModal.style.display = 'none';
+        });
+        
+        // 팝업 바깥 영역 클릭 시 닫기
+        window.addEventListener('click', (event) => {
+            if (event.target == consentModal) {
+                consentModal.style.display = 'none';
+            }
+        });
+    }
 
-    
     switchMode('webcam');
     
     document.getElementById("style-selection-controls").style.display = 'none';
     document.getElementById("tone-selection-controls").style.display = 'none';
 });
+
+// ----------------------------------------------------
+// 2.5. Consent Modal & Analysis Execution Logic (추가)
+// ----------------------------------------------------
+
+// 'Start Analysis' 버튼 클릭 시 웹캠 모드일 때만 모달을 띄우는 함수
+function showConsentModalForWebcam() {
+    const analysisMode = document.querySelector('input[name="analysis-mode"]:checked').value;
+    const startButton = document.getElementById("start-button");
+    
+    // 이미 실행 중이면, 그냥 일시 정지/재개 로직을 따릅니다.
+    if (isRunning) {
+        toggleAnalysis(); 
+        return;
+    }
+    
+    // 웹캠 모드인 경우에만 팝업을 띄웁니다.
+    if (analysisMode === 'webcam') {
+        document.getElementById('consent-modal').style.display = 'block';
+    } else {
+        // 이미지 업로드 모드에서 실수로 이 버튼이 눌린 경우를 대비
+        alert('이미지 업로드 모드에서는 "Process Uploaded Image" 버튼을 사용해 주세요.');
+    }
+}
+
+// 동의 후 분석을 시작하는 핸들러. Webcam 모드 시작.
+function handleConsentAndStartAnalysis() {
+    document.getElementById('consent-modal').style.display = 'none';
+    // 초상권 동의 후, 기존의 웹캠 시작/초기화 로직을 실행합니다.
+    toggleAnalysis(); 
+}
 
 
 // ===============================================
@@ -225,10 +276,6 @@ function switchMode(mode) {
     
     labelContainer.innerHTML = (mode === 'webcam' && isRunning) ? 'Running analysis...' : 'Waiting for analysis...';
     document.getElementById("recommendation-output").innerHTML = '<p>Select a model to begin the analysis or selection.</p>';
-    
-    // 💡 모드 변경 시 피드백 초기화
-    document.getElementById("feedback-message").style.display = 'none';
-    document.querySelectorAll('#feedback-container .feedback-buttons button').forEach(btn => btn.disabled = false);
 }
 
 
@@ -334,30 +381,277 @@ function handleModelChange(newModel) {
         styleControls.style.display = 'none'; 
         toneControls.style.display = 'block'; 
         recommendationOutput.innerHTML = '<p>Select a Personal Tone button from the **Personal Tone Guide** to see recommendations.</p>';
-        document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active')); 
+        document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active'));
     }
     
-    // 이미지 모드에서 모델 변경 시 즉시 재분석 시도
-    if (currentSource === 'image' && document.getElementById('uploaded-image')) {
-        processUploadedImage();
-    } else {
-        // 웹캠 모드에서 분석이 멈춘 상태라면, 결과 영역을 초기화하거나 다시 시작 메시지를 띄웁니다.
-        if (!isRunning) {
-            labelContainer.innerHTML = 'Waiting for analysis...';
+    if ((currentSource === 'webcam' && !isRunning && isInitialized) || currentSource === 'image') {
+        const modelToUse = (currentModel === 1) ? model1 : model2;
+        const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
+        const element = (currentSource === 'webcam') ? webcam.canvas : document.getElementById('uploaded-image');
+        
+        if(element) {
+            predict(modelToUse, modelName, element);
+        }
+    } 
+}
+
+
+// ===============================================
+// 6. Image Upload Logic
+// ===============================================
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // 💡 AR Try-On 정지
+    stopArTryOn();
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imgElement = document.createElement('img');
+        imgElement.id = 'uploaded-image';
+        imgElement.src = e.target.result;
+        
+        const container = document.getElementById("webcam-container");
+        container.innerHTML = '';
+        container.appendChild(imgElement);
+        
+        document.getElementById("process-image-btn").disabled = false;
+        labelContainer.innerHTML = 'Image uploaded. Click "Process Uploaded Image" to analyze.';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function processUploadedImage() {
+    const imgElement = document.getElementById('uploaded-image');
+    if (!imgElement) {
+        alert('Please upload an image first.');
+        return;
+    }
+    
+    // 💡 AR Try-On 정지
+    stopArTryOn();
+
+    if (!isInitialized) {
+        labelContainer.innerHTML = 'Loading models... Please wait.';
+        try {
+            model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
+            model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
+            faceDetectorModel = await blazeface.load(); // 💡 얼굴 감지 모델 로드
+            isInitialized = true;
+        } catch(e) {
+            labelContainer.innerHTML = 'Error loading models. Check console.';
+            return;
         }
     }
     
-    // 💡 모델 변경 시 피드백 초기화
-    document.getElementById("feedback-message").style.display = 'none';
-    document.querySelectorAll('#feedback-container .feedback-buttons button').forEach(btn => btn.disabled = false);
+    const modelToUse = (currentModel === 1) ? model1 : model2;
+    const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
+    labelContainer.innerHTML = 'Analyzing...';
+    
+    // Upload 모드에서도 얼굴 감지 수행
+    predict(modelToUse, modelName, imgElement); 
+    
+    document.getElementById("process-image-btn").innerText = 'Re-Analyze Image';
 }
 
+
+// ===============================================
+// 7. Prediction Logic (Core AI)
+// ===============================================
+
+async function predict(modelToUse, modelName, element) {
+    if (isRunning && currentSource === 'webcam') {
+        // Webcam 모드일 경우 얼굴 감지 (BlazeFace)를 통해 얼굴 위치를 찾고 크롭
+        const predictions = await faceDetectorModel.estimateFaces(element, false); 
+        
+        if (predictions.length > 0) {
+            const largestFace = predictions[0]; // 가장 큰 얼굴만 사용
+            const start = largestFace.topLeft;
+            const end = largestFace.bottomRight;
+            const size = [end[0] - start[0], end[1] - start[1]]; 
+            
+            // 💡 얼굴 크기 검사
+            if (size[0] < MIN_FACE_SIZE || size[1] < MIN_FACE_SIZE) {
+                // ... (생략된 경고 메시지 코드)
+            }
+            
+            // 💡 캔버스에서 얼굴 영역만 크롭
+            const faceCanvas = document.createElement('canvas');
+            faceCanvas.width = size[0];
+            faceCanvas.height = size[1];
+            const ctx = faceCanvas.getContext('2d');
+            ctx.drawImage(element, start[0], start[1], size[0], size[1], 0, 0, size[0], size[1]);
+            
+            // 💡 크롭된 얼굴 영역으로 예측 수행
+            const prediction = await modelToUse.predict(faceCanvas);
+            
+            displayPredictionResults(prediction, modelName);
+            
+        } else {
+            // 얼굴 감지 실패 시
+            labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">🔴 Face Not Found!</div><p>A clear face could not be detected.</p>';
+            document.getElementById("style-selection-controls").style.display = 'none';
+            document.getElementById("tone-selection-controls").style.display = 'none';
+        }
+    } else {
+        // Image Upload 모드 또는 Webcam Pause 모드
+        
+        // 1. 얼굴 감지 수행 (크롭을 위해)
+        const predictions = await faceDetectorModel.estimateFaces(element, false);
+        
+        if (predictions.length === 0) {
+            // 얼굴 감지 실패 시
+            labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">🔴 Face Not Found!</div><p>A clear face could not be detected.</p>';
+            document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: A clear face could not be detected.</p>';
+            document.getElementById("style-selection-controls").style.display = 'none';
+            document.getElementById("tone-selection-controls").style.display = 'none';
+            return;
+        }
+
+        // 선택적: 얼굴 크기 검사 (너무 멀리 있거나 작게 찍힌 경우)
+        const largestFace = predictions[0];
+        const faceWidth = largestFace.bottomRight[0] - largestFace.topLeft[0];
+        const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
+        if (faceWidth < MIN_FACE_SIZE || faceHeight < MIN_FACE_SIZE) {
+            labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ Warning: Your face appears too small!</div><p>Please move closer to the camera or adjust the image so your face appears larger.</p>';
+            document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: The face is too small.</p>';
+            document.getElementById("style-selection-controls").style.display = 'none';
+            document.getElementById("tone-selection-controls").style.display = 'none';
+            return;
+        }
+        
+        // ----------------------------------------------------------------
+        // 💡 2. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
+        // ----------------------------------------------------------------
+        const currentMaxPredictions = modelToUse.getTotalClasses();
+        const prediction = await modelToUse.predict(element);
+        
+        displayPredictionResults(prediction, modelName);
+    }
+}
+
+function displayPredictionResults(prediction, modelName) {
+    const currentMaxPredictions = prediction.length;
+    let resultHTML = `<div class="model-name-title"><h3>${modelName} Results:</h3></div>`;
+    for (let i = 0; i < currentMaxPredictions; i++) {
+        const classPrediction = `<strong>${prediction[i].className}</strong>: ${(prediction[i].probability * 100).toFixed(1)}%`;
+        resultHTML += `<div class="prediction-item">${classPrediction}</div>`;
+    }
+    labelContainer.innerHTML = resultHTML;
+
+    if (currentModel === 1) {
+        document.getElementById("style-selection-controls").style.display = 'block';
+        document.getElementById("tone-selection-controls").style.display = 'none';
+        
+        // 가장 높은 확률의 얼굴형을 자동으로 선택하여 추천 표시
+        const topResult = prediction.reduce((prev, current) => (prev.probability > current.probability) ? prev : current);
+        const topFaceType = topResult.className;
+        
+        document.querySelectorAll('.face-select-btn').forEach(btn => btn.classList.remove('active'));
+        const autoSelectBtn = document.querySelector(`.face-select-btn[data-facetype="${topFaceType}"]`);
+        if (autoSelectBtn) {
+            autoSelectBtn.classList.add('active');
+            showRecommendation(topFaceType);
+        }
+        
+    } else if (currentModel === 2) {
+        document.getElementById("tone-selection-controls").style.display = 'block';
+        document.getElementById("style-selection-controls").style.display = 'none';
+        
+        // 가장 높은 확률의 톤을 자동으로 선택하여 추천 표시
+        const topResult = prediction.reduce((prev, current) => (prev.probability > current.probability) ? prev : current);
+        const topToneType = topResult.className;
+        
+        document.querySelectorAll('.tone-select-btn').forEach(btn => btn.classList.remove('active'));
+        const autoSelectBtn = document.querySelector(`.tone-select-btn[data-tonetype="${topToneType}"]`);
+        if (autoSelectBtn) {
+            autoSelectBtn.classList.add('active');
+            showToneRecommendation(topToneType);
+        }
+    }
+}
+
+
+// ===============================================
+// 8. Manual Recommendation Output
+// ===============================================
+
+// 얼굴형 추천 출력
+function showRecommendation(faceType) {
+    const data = faceTypeData[faceType];
+    const outputContainer = document.getElementById("recommendation-output");
+    if (!data) {
+        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${faceType}.</p>`;
+        return;
+    }
+    
+    // 추천 HTML 생성
+    const recommendationHTML = `
+        <h4>⭐ Recommended Hairstyle Guide for ${faceType} Face Type</h4>
+        <p class="summary-text">${data.summary}</p>
+        
+        <div class="hair-styles-container">
+            <div class="style-column">
+                <h5><i class="fas fa-cut"></i> Short Styles</h5>
+                <img src="${data.shortImage}" alt="${faceType} Short Style">
+                <p>${data.short}</p>
+                <button class="btn ar-try-on-btn" onclick="startArTryOn('${data.shortSticker}')">AR Try-On</button>
+            </div>
+            <div class="style-column">
+                <h5><i class="fas fa-cut"></i> Long Styles</h5>
+                <img src="${data.longImage}" alt="${faceType} Long Style">
+                <p>${data.long}</p>
+                <button class="btn ar-try-on-btn" onclick="startArTryOn('${data.longSticker}')">AR Try-On</button>
+            </div>
+        </div>
+    `;
+    outputContainer.innerHTML = recommendationHTML;
+}
+
+// 퍼스널 톤 추천 출력
+function showToneRecommendation(toneType) {
+    const data = personalToneData[toneType];
+    const outputContainer = document.getElementById("recommendation-output");
+    if (!data) {
+        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${toneType} Tone.</p>`;
+        return;
+    }
+    
+    // 추천 HTML 생성
+    const recommendationHTML = `
+        <h4>⭐ Recommended Color Guide for ${toneType} Tone</h4>
+        <p class="summary-text">${data.summary}</p>
+        
+        <div class="tone-styles-container">
+            <div class="tone-text-column">
+                <div class="tone-category">
+                    <h5><i class="fas fa-cut"></i> Hair Colors</h5>
+                    <p>${data.hair}</p>
+                </div>
+                <div class="tone-category">
+                    <h5><i class="fas fa-tshirt"></i> Clothing Colors</h5>
+                    <p>${data.clothing}</p>
+                </div>
+                <div class="tone-category">
+                    <h5><i class="fas fa-gem"></i> Makeup Colors</h5>
+                    <p>${data.makeup}</p>
+                </div>
+            </div>
+            <div class="tone-image-column">
+                <img src="${data.image}" alt="${toneType} Color Palette">
+            </div>
+        </div>
+    `;
+    outputContainer.innerHTML = recommendationHTML;
+}
 
 function updateModelInfo() {
     const infoElement = document.getElementById("current-model-info");
     const btn1 = document.getElementById("model1-btn");
     const btn2 = document.getElementById("model2-btn");
-
+    
     if (currentModel === 1) {
         infoElement.innerHTML = "Active Model: **Face Type Analysis**";
         btn1.classList.add('active');
@@ -374,207 +668,6 @@ function updateModelInfo() {
 }
 
 // ===============================================
-// 6. Image Upload Logic 
-// ===============================================
-
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // 💡 AR Try-On 정지
-    stopArTryOn();
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const imgElement = document.createElement('img');
-        imgElement.id = 'uploaded-image';
-        imgElement.src = e.target.result;
-        const container = document.getElementById("webcam-container");
-        container.innerHTML = '';
-        container.appendChild(imgElement);
-        document.getElementById("process-image-btn").disabled = false;
-        labelContainer.innerHTML = 'Image uploaded. Click "Process Uploaded Image" to analyze.';
-    };
-    reader.readAsDataURL(file);
-    
-    // 💡 이미지 업로드 시 피드백 초기화
-    document.getElementById("feedback-message").style.display = 'none';
-    document.querySelectorAll('#feedback-container .feedback-buttons button').forEach(btn => btn.disabled = false);
-}
-
-async function processUploadedImage() {
-    const imgElement = document.getElementById('uploaded-image');
-    if (!imgElement) return;
-
-    // 💡 AR Try-On 정지
-    stopArTryOn();
-
-    if (!isInitialized) {
-        labelContainer.innerHTML = 'Loading models... Please wait.';
-        try {
-            model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
-            model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
-            faceDetectorModel = await blazeface.load(); // 💡 얼굴 감지 모델 로드
-            isInitialized = true;
-        } catch(e) {
-            labelContainer.innerHTML = 'Error loading models. Check console.';
-            return;
-        }
-    }
-
-    const modelToUse = (currentModel === 1) ? model1 : model2;
-    const modelName = (currentModel === 1) ? "Face Type Analysis" : "Personal Tone Analysis";
-    labelContainer.innerHTML = 'Analyzing image...';
-    await predict(modelToUse, modelName, imgElement);
-    document.getElementById("process-image-btn").innerText = 'Analysis Complete (Click to re-analyze)';
-}
-
-// ===============================================
-// 7. Core Prediction and UI Update
-// ===============================================
-
-async function predict(modelToUse, modelName, element) {
-    if (!modelToUse || !faceDetectorModel) {
-        labelContainer.innerHTML = `Error: ${modelName} or Face Detector is not loaded.`;
-        return;
-    }
-
-    // ----------------------------------------------------------------
-    // 💡 1. 얼굴 감지(Face Detection) 로직
-    // ----------------------------------------------------------------
-    const predictions = await faceDetectorModel.estimateFaces(element, false); // false: flipHorizontal 
-    
-    if (predictions.length === 0 || predictions[0].probability < FACE_DETECTION_THRESHOLD) {
-        labelContainer.innerHTML = '<div style="color: red; font-weight: bold; padding: 10px;">⚠️ Face Not Detected!</div><p>Please adjust your position or upload a clearer image.</p>';
-        document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed. Adjust image/position.</p>';
-        document.getElementById("style-selection-controls").style.display = 'none';
-        document.getElementById("tone-selection-controls").style.display = 'none';
-        return;
-    }
-    
-    // 감지된 얼굴의 크기 계산
-    const faceBox = predictions[0].boundingBox;
-    const faceWidth = faceBox.bottomRight[0] - faceBox.topLeft[0];
-    const faceHeight = faceBox.bottomRight[1] - faceBox.topLeft[1];
-
-    if (faceWidth < MIN_FACE_SIZE || faceHeight < MIN_FACE_SIZE) {
-         labelContainer.innerHTML = '<div style="color: orange; font-weight: bold; padding: 10px;">⚠️ Warning: Your face appears too small!</div><p>Please move closer to the camera or adjust the image so your face appears larger.</p>';
-         document.getElementById("recommendation-output").innerHTML = '<p>Face detection failed: The face is too small.</p>';
-         document.getElementById("style-selection-controls").style.display = 'none';
-         document.getElementById("tone-selection-controls").style.display = 'none';
-         return;
-    }
-
-
-    // ----------------------------------------------------------------
-    // 💡 2. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
-    // ----------------------------------------------------------------
-    
-    const currentMaxPredictions = modelToUse.getTotalClasses(); 
-    const prediction = await modelToUse.predict(element);
-
-    let resultHTML = `<div class="model-name-title"><h3>${modelName} Results:</h3></div>`;
-    
-    for (let i = 0; i < currentMaxPredictions; i++) {
-        // 소수점 첫째 자리까지만 표시
-        const classPrediction = `<strong>${prediction[i].className}</strong>: ${(prediction[i].probability * 100).toFixed(1)}%`;
-        resultHTML += `<div class="prediction-item">${classPrediction}</div>`;
-    }
-    
-    labelContainer.innerHTML = resultHTML;
-
-    // 추천 가이드 버튼 활성화/비활성화
-    if (currentModel === 1) {
-        document.getElementById("style-selection-controls").style.display = 'block';
-        document.getElementById("tone-selection-controls").style.display = 'none'; 
-    } else if (currentModel === 2) {
-        document.getElementById("tone-selection-controls").style.display = 'block';
-        document.getElementById("style-selection-controls").style.display = 'none'; 
-    }
-    
-    // 💡 분석 결과가 새로 나오면 피드백 버튼을 초기 상태로 되돌립니다. (새로 추가된 부분)
-    document.getElementById("feedback-message").style.display = 'none';
-    document.querySelectorAll('#feedback-container .feedback-buttons button').forEach(btn => btn.disabled = false); // 버튼 재활성화
-}
-
-// ===============================================
-// 8. Manual Recommendation Output
-// ===============================================
-
-// 얼굴형 추천 출력
-function showRecommendation(faceType) {
-    const data = faceTypeData[faceType];
-    const outputContainer = document.getElementById("recommendation-output");
-    if (!data) {
-        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${faceType}.</p>`;
-        return;
-    }
-
-    const recommendationHTML = `
-        <div class="recommendation-content">
-            <h4>✨ Hairstyle Guide for ${faceType} Face Shape</h4>
-            <p class="summary-text">${data.summary}</p>
-            <div class="hair-styles-container">
-                <div class="style-column">
-                    <h5><i class="fas fa-cut"></i> Short Hair: ${data.short}</h5>
-                    <img src="${data.shortImage}" alt="${faceType} Short Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.shortSticker}">Try AR Style</button>
-                </div>
-                <div class="style-column">
-                    <h5><i class="fas fa-cut"></i> Long Hair: ${data.long}</h5>
-                    <img src="${data.longImage}" alt="${faceType} Long Hairstyle">
-                    <button class="btn ar-try-on-btn" data-sticker="${data.longSticker}">Try AR Style</button>
-                </div>
-            </div>
-        </div>
-    `;
-    outputContainer.innerHTML = recommendationHTML;
-
-    // AR 버튼에 이벤트 리스너 재등록
-    document.querySelectorAll('.ar-try-on-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const stickerPath = e.target.getAttribute('data-sticker');
-            startArTryOn(stickerPath);
-        });
-    });
-}
-
-// 퍼스널 톤 추천 출력
-function showToneRecommendation(toneType) {
-    const data = personalToneData[toneType];
-    const outputContainer = document.getElementById("recommendation-output");
-    if (!data) {
-        outputContainer.innerHTML = `<p style="color:red;">Error: No recommendation data found for ${toneType}.</p>`;
-        return;
-    }
-
-    const recommendationHTML = `
-        <div class="recommendation-content">
-            <h4>🎨 Personal Tone Guide: ${toneType} Tone</h4>
-            <p class="summary-text">${data.summary}</p>
-            <div class="tone-styles-container">
-                <div class="tone-image-column">
-                    <img src="${data.image}" alt="${toneType} Tone Palette">
-                </div>
-                <div class="tone-details-column">
-                    <h5><i class="fas fa-palette"></i> Recommended Hair Color</h5>
-                    <p>${data.hair}</p>
-                    <h5><i class="fas fa-tshirt"></i> Recommended Clothing Colors</h5>
-                    <p>Light tones: ${data.clothing.split('|')[0]}</p>
-                    <p>Dark tones: ${data.clothing.split('|')[1]}</p>
-                    <p>Neutrals: ${data.clothing.split('|')[2]}</p>
-                    <h5><i class="fas fa-flask"></i> Recommended Makeup Colors</h5>
-                    <p>Lips: ${data.makeup.split('|')[0]}</p>
-                    <p>Eyes: ${data.makeup.split('|')[1]}</p>
-                    <p>Blush: ${data.makeup.split('|')[2]}</p>
-                </div>
-            </div>
-        </div>
-    `;
-    outputContainer.innerHTML = recommendationHTML;
-}
-
-// ===============================================
 // 9. AR Try-On Logic (기존 핵심 기능)
 // ===============================================
 
@@ -584,123 +677,204 @@ async function startArTryOn(stickerPath) {
     if (isRunning) {
         toggleAnalysis();
     }
-
+    
     // AR 컨테이너 표시
     arContainer.style.display = 'flex';
-
+    
     // 스티커 이미지 설정
     arStickerOverlay.src = stickerPath;
     arStickerOverlay.style.display = 'block';
+    
+    // 💡 [수정] 현재 스티커 기본 이름 및 길이 정보 저장 (파일명: oval_long_sticker.png 가정)
+    const parts = stickerPath.split('/');
+    const fileName = parts[parts.length - 1]; // 파일명 (예: oval_long_sticker.png)
+    currentStickerBaseName = fileName.replace('_sticker.png', ''); // 예: oval_long
 
-    // 웹캠 스트림 설정
-    try {
-        if (arWebcamStream) {
-            stopArWebcamStream(); // 기존 스트림이 있다면 정지
+    // 웹캠 스트림이 없으면 새로 시작
+    if (!arWebcamStream) {
+        try {
+            arWebcamStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: 400,
+                    height: 300
+                }
+            });
+            arWebcamVideo.srcObject = arWebcamStream;
+            
+            // 웹캠 피드가 재생될 때 얼굴 감지 루프 시작
+            arWebcamVideo.onloadedmetadata = () => {
+                arWebcamVideo.play();
+                arLoop();
+            };
+        } catch (error) {
+            console.error("Error accessing AR webcam:", error);
+            alert("AR Try-On을 시작할 수 없습니다. 웹캠 접근 권한을 확인해주세요.");
+            arContainer.style.display = 'none';
+            arWebcamStream = null;
+            return;
         }
-        arWebcamStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: 400,
-                height: 300,
-                facingMode: "user"
-            }
-        });
-        arWebcamVideo.srcObject = arWebcamStream;
-        arWebcamVideo.play();
-    } catch (err) {
-        console.error("Error accessing AR webcam: ", err);
-        arContainer.innerHTML = "<p style='color:red;'>AR Webcam access failed. (Ensure HTTPS/permissions)</p>";
+    } else {
+        // 이미 스트림이 있으면 루프만 재시작
+        arLoop();
     }
+    
+    // 색상 버튼 초기화 및 오리지널 활성화
+    document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById("color-original-btn").classList.add('active');
 }
 
-// AR 웹캠 스트림 정지
-function stopArWebcamStream() {
+// AR 얼굴 감지 및 스티커 위치 업데이트 루프
+async function arLoop() {
+    // arWebcamVideo가 일시 중지된 상태라면 루프 실행 방지
+    if (arWebcamVideo.paused || arWebcamVideo.ended || arContainer.style.display === 'none') return;
+    
+    const videoWidth = arWebcamVideo.videoWidth;
+    const videoHeight = arWebcamVideo.videoHeight;
+    
+    if (faceDetectorModel) {
+        const predictions = await faceDetectorModel.estimateFaces(arWebcamVideo, false);
+        
+        if (predictions.length > 0) {
+            const largestFace = predictions[0];
+            const start = largestFace.topLeft;
+            const end = largestFace.bottomRight;
+            const size = [end[0] - start[0], end[1] - start[1]];
+            
+            // 얼굴 영역 중앙에 스티커를 위치시키고 크기를 조정 (조정 계수 필요)
+            // 얼굴 너비의 약 1.5배 (스타일에 따라 조정)
+            const STICKER_SCALE = 1.6; 
+            const STICKER_OFFSET_Y_RATIO = 0.3; // 얼굴 상단에서 아래로 내리는 비율
+            
+            const stickerWidth = size[0] * STICKER_SCALE;
+            const stickerHeight = size[1] * STICKER_SCALE;
+
+            // 스티커의 시작 위치
+            const stickerX = start[0] - ((stickerWidth - size[0]) / 2);
+            const stickerY = start[1] - (size[1] * STICKER_OFFSET_Y_RATIO);
+            
+            arStickerOverlay.style.left = `${stickerX}px`;
+            arStickerOverlay.style.top = `${stickerY}px`;
+            arStickerOverlay.style.width = `${stickerWidth}px`;
+            arStickerOverlay.style.height = `${stickerHeight}px`;
+            arStickerOverlay.style.display = 'block';
+
+        } else {
+            arStickerOverlay.style.display = 'none'; // 얼굴이 감지되지 않으면 스티커 숨김
+        }
+    }
+    
+    requestAnimationFrame(arLoop);
+}
+
+// AR 체험 중지
+function stopArTryOn() {
     if (arWebcamStream) {
         arWebcamStream.getTracks().forEach(track => track.stop());
         arWebcamStream = null;
     }
-}
-
-// AR Try-On 전체 정지
-function stopArTryOn() {
-    stopArWebcamStream();
+    if (arWebcamVideo) {
+        arWebcamVideo.srcObject = null;
+    }
     arContainer.style.display = 'none';
-    arStickerOverlay.src = '';
     arStickerOverlay.style.display = 'none';
+    
+    // 변수 초기화
+    currentStickerBaseName = '';
 }
 
-// 🌟 AR 스크린샷 캡처 및 다운로드 (기존 핵심 기능)
-function captureArScreenshot() {
-    if (!arWebcamVideo.srcObject) {
-        alert("AR Try-On is not active. Please start AR mode first.");
+// 💡 (추가) AR 스티커 컬러를 변경하는 함수
+function changeStickerColor(colorType) {
+    if (!currentStickerBaseName) {
+        alert('AR Try-On을 먼저 시작해 주세요.');
         return;
     }
+    
+    // 버튼 클래스 업데이트
+    document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.color-btn[data-color="${colorType}"]`).classList.add('active');
 
+    let newStickerPath = '';
+    if (colorType === 'original') {
+        // 기본 이미지 경로: images/oval_long_sticker.png
+        newStickerPath = `images/${currentStickerBaseName}_sticker.png`;
+    } else {
+        // 컬러 이미지 경로: images/oval_long_warm.png (고객님 규칙 반영)
+        newStickerPath = `images/${currentStickerBaseName}_${colorType}.png`;
+    }
+    
+    // 이미지 스티커 소스 업데이트
+    arStickerOverlay.src = newStickerPath;
+}
+
+
+// ===============================================
+// 10. AR Screenshot Logic (새 기능)
+// ===============================================
+
+function captureArScreenshot() {
+    if (arWebcamVideo.paused || arWebcamVideo.ended || arContainer.style.display === 'none') {
+        alert('AR Try-On이 실행 중이지 않습니다.');
+        return;
+    }
+    
     const videoWidth = arWebcamVideo.videoWidth;
     const videoHeight = arWebcamVideo.videoHeight;
-
     const canvas = document.createElement('canvas');
     canvas.width = videoWidth;
     canvas.height = videoHeight;
     const ctx = canvas.getContext('2d');
-
-    // 2. 웹캠 비디오 그리기 (거울 효과 적용)
-    // 웹캠 비디오는 CSS transform: scaleX(-1)로 좌우 반전되어 있으므로, 캔버스에도 동일하게 적용해야 합니다.
-    ctx.save(); // 현재 캔버스 상태 저장
-    ctx.translate(videoWidth, 0); // x축 이동
-    ctx.scale(-1, 1); // 좌우 반전
+    
+    // 1. 웹캠 비디오 프레임 그리기
+    // 💡 웹캠 비디오는 거울 모드를 위해 CSS transform: scaleX(-1)이 적용되어 있습니다.
+    // 캔버스에 그릴 때는 이 변환을 수동으로 적용해야 합니다.
+    ctx.translate(videoWidth, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(arWebcamVideo, 0, 0, videoWidth, videoHeight);
-    ctx.restore(); // 변환 상태 초기화
-
+    
+    // 2. 변환 초기화
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    
     // 3. 스티커 이미지 그리기
     if (arStickerOverlay.style.display !== 'none' && arStickerOverlay.src) {
         const stickerImg = new Image();
         stickerImg.crossOrigin = "anonymous"; // CORS 문제 방지
         
-        stickerImg.onload = () => {
-            // AR 스티커의 현재 CSS 위치와 크기(px)를 가져와서 캔버스에 그릴 좌표로 사용합니다.
-            const wrapper = document.getElementById('ar-webcam-wrapper');
-            const wrapperRect = wrapper.getBoundingClientRect();
-            
-            // 이미지 크기가 400x300인 경우를 가정하고 비율을 계산합니다.
-            const ratioX = videoWidth / wrapperRect.width;
-            const ratioY = videoHeight / wrapperRect.height;
+        // 이미지 로드 후 캔버스에 그리기
+        stickerImg.onload = () => {            
+            // AR 웹캠 Wrapper 크기
+            const arWrapper = document.getElementById("ar-webcam-wrapper");
+            const wrapperWidth = arWrapper.clientWidth; // 400
+            const wrapperHeight = arWrapper.clientHeight; // 300
 
-            const stickerComputedStyle = window.getComputedStyle(arStickerOverlay);
-            
-            // CSS에서 계산된 위치와 크기를 실제 비디오/캔버스 크기에 맞춰 조정
-            const drawX_css = parseFloat(stickerComputedStyle.left);
-            const drawY_css = parseFloat(stickerComputedStyle.top);
-            const drawWidth_css = parseFloat(stickerComputedStyle.width);
-            const drawHeight_css = parseFloat(stickerComputedStyle.height);
-            
-            // 캔버스 좌표계에 맞게 변환
-            const drawX = drawX_css * ratioX;
-            const drawY = drawY_css * ratioY;
-            const drawWidth = drawWidth_css * ratioX;
-            const drawHeight = drawHeight_css * ratioY;
+            // 스티커의 현재 위치/크기 (CSS 픽셀)
+            const stickerX = parseFloat(arStickerOverlay.style.left);
+            const stickerY = parseFloat(arStickerOverlay.style.top);
+            const stickerW = parseFloat(arStickerOverlay.style.width);
+            const stickerH = parseFloat(arStickerOverlay.style.height);
 
-            // 스티커 이미지를 그립니다. 스티커는 반전되지 않아야 합니다.
-            // 캔버스의 변환이 restore()로 초기화되었기 때문에 별도의 반전이 필요 없습니다.
-            ctx.drawImage(stickerImg, drawX, drawY, drawWidth, drawHeight);
+            // 캔버스에 직접 그리기 (Webcam 크기에 맞춰 조정)
+            ctx.drawImage(stickerImg, stickerX, stickerY, stickerW, stickerH);
 
-            // 4. 캡처된 이미지 다운로드
-            const dataURL = canvas.toDataURL('image/png');
-            const a = document.createElement('a');
-            a.href = dataURL;
-            a.download = 'AI_StyleMate_AR_Screenshot.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // 4. 다운로드 실행
+            triggerDownload(canvas, 'AI_StyleMate_Screenshot.png');
+        };
+        stickerImg.onerror = () => {
+            alert("스티커 이미지 로드에 실패했습니다. 스크린샷을 저장할 수 없습니다.");
         };
         stickerImg.src = arStickerOverlay.src;
+        
     } else {
-        // 스티커가 없는 경우 비디오만 다운로드
-        const dataURL = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = dataURL;
-        a.download = 'AI_StyleMate_Webcam_Screenshot.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // 스티커가 없으면 비디오만 다운로드
+        triggerDownload(canvas, 'AI_StyleMate_Webcam_Capture.png');
     }
+}
+
+function triggerDownload(canvas, filename) {
+    const dataURL = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
