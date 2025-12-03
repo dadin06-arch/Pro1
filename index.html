@@ -48,22 +48,29 @@
             </div>
             
             <div id="webcam-controls">
-                <button id="start-button" class="btn primary-btn">▶️ Start Analysis</button>
+                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
             </div>
 
             <div id="upload-controls" style="display: none;">
-                <input type="file" id="image-upload" accept="image/*">
+                <input type="file" id="image-upload" accept="image/*" class="file-input">
                 <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
             </div>
             
+            <div id="current-model-info" class="info-text">Active Model: **Face Type Analysis**</div>
             <div class="button-group">
-                <button id="model1-btn" class="btn model-select-btn active">Face Type Analysis</button>
-                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis</button>
+                <button id="model1-btn" class="btn model-select-btn active">Face Type Analysis (Model 1)</button>
+                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis (Model 2)</button>
             </div>
-            <p id="current-model-info" style="font-style: italic; margin-top: 10px;"></p>
             
-            <div id="style-selection-controls">
-                <h3>Hair Style Guide: Manual Selection</h3>
+            <div id="label-container" class="result-display">Waiting for analysis...</div>
+
+        </section>
+
+        <section id="analysis-section" class="card fade-in">
+            <h2><i class="fas fa-magic"></i> Recommendation Guide</h2>
+            
+            <div id="style-selection-controls" style="display: none;">
+                <h3>Hair Style Guide</h3>
                 <div class="face-type-buttons">
                     <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
                     <button class="btn face-select-btn" data-facetype="Round">Round</button>
@@ -72,54 +79,64 @@
                     <button class="btn face-select-btn" data-facetype="Oblong">Oblong</button>
                 </div>
             </div>
-            
-            <div id="tone-selection-controls">
-                <h3>Personal Tone Guide: Manual Selection</h3>
-                <div class="tone-type-buttons">
-                    <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
-                    <button class="btn tone-select-btn" data-tonetype="Warm">Warm Tone</button>
-                </div>
-            </div>
-            
-        </section>
 
-        <section id="results" class="card fade-in">
-            <h2><i class="fas fa-chart-bar"></i> Analysis & Recommendation</h2>
-            
-            <div id="prediction-output">
-                <div id="label-container">Waiting for analysis...</div>
-            </div>
-            
-            <div id="feedback-container">
-                <p id="feedback-question">Are you satisfied with this analysis?</p>
-                <div class="feedback-buttons">
-                    <button id="feedback-like" class="btn primary-btn"><i class="fas fa-thumbs-up"></i> Like</button>
-                    <button id="feedback-dislike" class="btn secondary-btn"><i class="fas fa-thumbs-down"></i> Dislike</button>
+            <div id="tone-selection-controls" style="display: none;">
+                <h3>Personal Tone Guide</h3>
+                <div class="tone-type-buttons">
+                    <button class="btn tone-select-btn" data-tonetype="Warm">Warm Tone</button>
+                    <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
                 </div>
-                <p id="feedback-message" style="display: none; margin-top: 10px; font-weight: bold; color: #4CAF50;">Thank you for your feedback!</p>
             </div>
-            <hr>
-            
-            <div id="recommendation-output">
+
+            <div id="recommendation-output" class="result-detail">
                 <p>Select a model to begin the analysis or selection.</p>
             </div>
             
             <div id="ar-container" style="display: none;">
                 <h4 class="ar-title"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
                 <p class="ar-subtitle">Adjust your head position to fit the sticker outline.</p>
-                <div id="ar-webcam-wrapper">
-                    <video id="ar-webcam-video" autoplay playsinline></video>
-                    <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
+                
+                <div id="ar-view-and-controls-wrapper"> 
+                    <div id="ar-webcam-wrapper">
+                        <video id="ar-webcam-video" autoplay playsinline></video>
+                        <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
+                    </div>
+                    
+                    <div id="color-selection-controls" class="button-group vertical-group">
+                        <button id="color-original-btn" class="btn color-btn active" data-color="original">Original Color</button>
+                        <button id="color-warm-btn" class="btn color-btn" data-color="warm">Warm Color</button>
+                        <button id="color-cool-btn" class="btn color-btn" data-color="cool">Cool Color</button>
+                    </div>
                 </div>
                 <div class="ar-controls-group">
                     <button id="ar-screenshot-btn" class="btn primary-btn">📸 Screenshot</button>
                     <button id="ar-stop-button" class="btn secondary-btn">⏹️ Stop Try-On</button>
                 </div>
-            </div>
-            
+            </div>            
         </section>
     </div>
 
+    <div id="consent-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 class="modal-title">초상권 및 개인정보 보호 동의</h3>
+            <p class="modal-body">
+                본 서비스는 사용자의 얼굴 이미지를 AI 분석에 활용하여 얼굴형 및 퍼스널 컬러를 추천합니다.
+                <br>
+                **1. 이미지 사용 목적:** AI 모델(TensorFlow.js)을 통한 얼굴 특징 분석.
+                <br>
+                **2. 이미지 저장:** 분석에 사용된 이미지는 **서버에 전송되거나 저장되지 않습니다.** 모든 분석은 사용자 기기(브라우저) 내에서만 처리됩니다.
+                <br>
+                **3. 동의 거부 시:** 동의하지 않으시면 분석 기능을 이용할 수 없습니다.
+                <br><br>
+                분석을 시작하시려면 위 내용에 **동의**해 주십시오.
+            </p>
+            <div class="modal-buttons">
+                <button id="consent-agree-btn" class="btn primary-btn">✅ 동의 및 분석 시작</button>
+                <button id="consent-cancel-btn" class="btn secondary-btn">❌ 취소</button>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
