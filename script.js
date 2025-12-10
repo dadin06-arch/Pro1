@@ -1,4 +1,4 @@
-// script.js - AI StyleMate Logic (Final Version with Face Detection + AR Try-On)
+// script.js - AI StyleMate Logic (Final Version with Stable Face Tracking AR)
 
 // ----------------------------------------------------
 // 1. MODEL PATHS, VARIABLES & DATA DEFINITION
@@ -20,10 +20,8 @@ let arWebcamStream = null;
 const arWebcamVideo = document.getElementById("ar-webcam-video");
 const arStickerOverlay = document.getElementById("ar-sticker-overlay");
 const arContainer = document.getElementById("ar-container");
-// 💡 AR 컬러 변경 관련 변수 추가
-let currentStickerBaseName = ''; // 현재 스타일의 기본 이름 (예: oval_long)
-let currentStickerLength = ''; // 현재 스타일의 길이 (예: short 또는 long)
-// 🌟 스크린샷 버튼 DOM 요소 추가
+let currentStickerBaseName = ''; 
+let currentStickerLength = ''; 
 const arScreenshotBtn = document.getElementById("ar-screenshot-btn");
 
 // 💡 AR 실시간 추적 루프 ID 추가
@@ -31,8 +29,8 @@ let arRequestID;
 
 
 // 💡 얼굴 감지 임계값 (필요 시 조정 가능)
-const FACE_DETECTION_THRESHOLD = 0.9; // 얼굴 감지 신뢰도
-const MIN_FACE_SIZE = 50; // 최소 얼굴 크기 (픽셀)
+const FACE_DETECTION_THRESHOLD = 0.9; 
+const MIN_FACE_SIZE = 50; 
 
 // 💡 얼굴형별 추천 데이터 및 이미지 URL 정의
 const faceTypeData = {
@@ -42,7 +40,6 @@ const faceTypeData = {
         long: "Layered cuts, natural waves.",
         shortImage: 'images/oval_short.png',
         longImage: 'images/oval_long.png',
-        // 💡 AR 스티커 파일명 추가
         shortSticker: 'images/oval_short_sticker.png',
         longSticker: 'images/oval_long_sticker.png'
     },
@@ -52,7 +49,6 @@ const faceTypeData = {
         long: "Long bob, side-flowing layers.",
         shortImage: 'images/round_short.png',
         longImage: 'images/round_long.png',
-        // 💡 AR 스티커 파일명 추가
         shortSticker: 'images/round_short_sticker.png',
         longSticker: 'images/round_long_sticker.png'
     },
@@ -62,7 +58,6 @@ const faceTypeData = {
         long: "Waves with face-framing layers.",
         shortImage: 'images/square_short.png',
         longImage: 'images/square_long.png',
-        // 💡 AR 스티커 파일명 추가
         shortSticker: 'images/square_short_sticker.png',
         longSticker: 'images/square_long_sticker.png'
     },
@@ -72,7 +67,6 @@ const faceTypeData = {
         long: "Heavier layers below the chin, side parts.",
         shortImage: 'images/heart_short.png',
         longImage: 'images/heart_long.png',
-        // 💡 AR 스티커 파일명 추가
         shortSticker: 'images/heart_short_sticker.png',
         longSticker: 'images/heart_long_sticker.png'
     },
@@ -82,13 +76,12 @@ const faceTypeData = {
         long: "Medium-length layers, styles with side volume.",
         shortImage: 'images/oblong_short.png',
         longImage: 'images/oblong_long.png',
-        // 💡 AR 스티커 파일명 추가
         shortSticker: 'images/oblong_short_sticker.png',
         longSticker: 'images/oblong_long_sticker.png'
     }
 };
 
-// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의 (파일명 최종 수정됨)
+// 💡 퍼스널 톤 추천 데이터 및 이미지 URL 정의
 const personalToneData = {
     "Cool": {
         summary: "Blue-based and purple-based cool hues make the skin look clearer and brighter.",
@@ -130,12 +123,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.classList.add('active');
             const faceType = e.target.getAttribute('data-facetype');
             showRecommendation(faceType); 
-            // 💡 AR Try-On 정지
             stopArTryOn();
         });
     });
 
-    // 💡 컬러 선택 버튼 리스너 추가
     document.getElementById("color-original-btn").addEventListener("click", () => changeStickerColor("original"));
     document.getElementById("color-warm-btn").addEventListener("click", () => changeStickerColor("warm"));
     document.getElementById("color-cool-btn").addEventListener("click", () => changeStickerColor("cool"));
@@ -147,15 +138,12 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.classList.add('active');
             const toneType = e.target.getAttribute('data-tonetype');
             showToneRecommendation(toneType); 
-             // 💡 AR Try-On 정지
             stopArTryOn();
         });
     });
     
-    // 💡 AR Stop Button Listener
     document.getElementById("ar-stop-button").addEventListener('click', stopArTryOn);
     
-    // 🌟 AR Screenshot Button Listener 등록
     if (arScreenshotBtn) {
         arScreenshotBtn.addEventListener('click', captureArScreenshot);
     }
@@ -178,7 +166,6 @@ function switchMode(mode) {
         toggleAnalysis(); 
     }
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
     
     const webcamContainer = document.getElementById("webcam-container");
@@ -233,7 +220,6 @@ async function toggleAnalysis() {
         return; 
     }
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
     
     if (!isInitialized) {
@@ -245,7 +231,6 @@ async function toggleAnalysis() {
             model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
             model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
             
-            // 💡 얼굴 감지 모델 로드 추가
             faceDetectorModel = await blazeface.load();
 
             const flip = true; 
@@ -307,7 +292,6 @@ function handleModelChange(newModel) {
     const toneControls = document.getElementById("tone-selection-controls"); 
     const recommendationOutput = document.getElementById("recommendation-output");
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
     
     if (newModel === 1) { 
@@ -343,7 +327,6 @@ function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
 
     const reader = new FileReader();
@@ -366,7 +349,6 @@ async function processUploadedImage() {
     const imgElement = document.getElementById('uploaded-image');
     if (!imgElement) return;
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
     
     if (!isInitialized) {
@@ -374,7 +356,7 @@ async function processUploadedImage() {
         try {
             model1 = await tmImage.load(URL_MODEL_1 + "model.json", URL_MODEL_1 + "metadata.json");
             model2 = await tmImage.load(URL_MODEL_2 + "model.json", URL_MODEL_2 + "metadata.json");
-            faceDetectorModel = await blazeface.load(); // 💡 얼굴 감지 모델 로드
+            faceDetectorModel = await blazeface.load(); 
             isInitialized = true;
         } catch(e) {
             labelContainer.innerHTML = 'Error loading models. Check console.';
@@ -403,7 +385,7 @@ async function predict(modelToUse, modelName, element) {
     }
     
     // ----------------------------------------------------------------
-    // 💡 1. 얼굴 감지(Face Detection) 로직: 얼굴의 명확성 확인
+    // 1. 얼굴 감지(Face Detection) 로직: 얼굴의 명확성 확인
     // ----------------------------------------------------------------
     const predictions = await faceDetectorModel.estimateFaces(element, FACE_DETECTION_THRESHOLD);
 
@@ -416,7 +398,6 @@ async function predict(modelToUse, modelName, element) {
         return; 
     }
     
-    // 선택적: 얼굴 크기 검사 (너무 멀리 있거나 작게 찍힌 경우)
     const largestFace = predictions[0]; 
     const faceWidth = largestFace.bottomRight[0] - largestFace.topLeft[0];
     const faceHeight = largestFace.bottomRight[1] - largestFace.topLeft[1];
@@ -431,7 +412,7 @@ async function predict(modelToUse, modelName, element) {
     }
     
     // ----------------------------------------------------------------
-    // 💡 2. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
+    // 2. 분류(Classification) 로직: 얼굴이 명확할 때만 실행
     // ----------------------------------------------------------------
     
     const currentMaxPredictions = modelToUse.getTotalClasses(); 
@@ -460,7 +441,6 @@ async function predict(modelToUse, modelName, element) {
 // 8. Manual Recommendation Output 
 // ===============================================
 
-// 얼굴형 추천 출력
 function showRecommendation(faceType) {
     const data = faceTypeData[faceType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -493,7 +473,6 @@ function showRecommendation(faceType) {
     `;
     outputContainer.innerHTML = recommendationHTML; 
     
-    // 💡 합성 버튼 이벤트 리스너 할당
     document.querySelectorAll('.ar-try-on-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const stickerPath = e.target.getAttribute('data-sticker');
@@ -502,7 +481,6 @@ function showRecommendation(faceType) {
     });
 }
 
-// 퍼스널 톤 추천 출력
 function showToneRecommendation(toneType) {
     const data = personalToneData[toneType]; 
     const outputContainer = document.getElementById("recommendation-output");
@@ -512,7 +490,6 @@ function showToneRecommendation(toneType) {
         return;
     }
     
-    // 💡 AR Try-On 정지
     stopArTryOn();
 
     const recommendationHTML = `
@@ -568,45 +545,42 @@ function updateModelInfo() {
 
 
 // ===============================================
-// 9. AR Try-On Logic (기존 핵심 기능 + 실시간 추적 로직 추가)
+// 9. AR Try-On Logic (핵심: 실시간 추적 로직)
 // ===============================================
 
 /**
- * 💡 새로운 함수: AR Try-On 모드에서 실시간 얼굴 추적 및 스티커 위치 업데이트 루프
+ * 새로운 함수: AR Try-On 모드에서 실시간 얼굴 추적 및 스티커 위치 업데이트 루프
  */
 async function arLoop() {
     if (!arWebcamVideo || arWebcamVideo.paused || arWebcamVideo.ended || !faceDetectorModel) {
-        // 비디오가 없거나 정지 상태이거나 모델이 없으면 루프를 중지합니다.
         if (arRequestID) window.cancelAnimationFrame(arRequestID);
         arRequestID = null;
         return;
     }
 
     // 1. 비디오 프레임으로 얼굴 감지 실행
-    // estimateFaces는 비디오 요소 자체에서 감지합니다.
     const predictions = await faceDetectorModel.estimateFaces(arWebcamVideo, FACE_DETECTION_THRESHOLD);
 
     if (predictions.length > 0) {
-        const p = predictions[0]; // 가장 큰 얼굴 하나만 사용
+        const p = predictions[0]; 
         const [x1, y1] = p.topLeft;
         const [x2, y2] = p.bottomRight;
         const faceWidth = x2 - x1;
         const faceHeight = y2 - y1;
         
-        // 2. 얼굴 위치에 맞춰 스티커 CSS 업데이트 (헤어스타일 스티커에 맞게 조정)
-        
         // ⭐ 핵심 계산: 스티커 위치와 크기 조정 ⭐
-        // - 헤어스타일은 얼굴 영역보다 훨씬 넓게 (약 1.8배) 설정
+        // 헤어스타일 스티커를 얼굴 영역보다 더 넓게 확장하고(1.8배) 눈썹 위로 이동시킵니다.
         const stickerScaleFactor = 1.8; 
+        const topOffsetFactor = 0.5; 
+        
         const stickerWidth = faceWidth * stickerScaleFactor;
         const stickerHeight = faceHeight * stickerScaleFactor;
         
-        // - X 위치: 얼굴 중앙에서 스티커 폭의 절반을 빼서 중앙에 오도록 조정
+        // X 위치: 얼굴 중앙에 스티커 중앙이 오도록 계산
         const centerX = x1 + faceWidth / 2;
         const left = centerX - stickerWidth / 2;
         
-        // - Y 위치: 이마 위쪽(헤어라인)에 맞추기 위해 얼굴 높이의 약 50%만큼 위로 이동
-        const topOffsetFactor = 0.5; 
+        // Y 위치: 얼굴 상단(y1)에서 얼굴 높이의 50%만큼 위로 이동
         const top = y1 - faceHeight * topOffsetFactor; 
         
         // 3. 스티커 CSS 업데이트
@@ -615,9 +589,10 @@ async function arLoop() {
         arStickerOverlay.style.width = `${stickerWidth}px`;
         arStickerOverlay.style.height = `${stickerHeight}px`;
         
+        // 얼굴이 감지되었을 때만 스티커 표시
         arStickerOverlay.style.display = 'block';
     } else {
-        // 얼굴이 감지되지 않으면 스티커 숨김
+        // 얼굴이 감지되지 않으면 스티커 숨김 (잔상 방지)
         arStickerOverlay.style.display = 'none';
     }
 
@@ -628,52 +603,42 @@ async function arLoop() {
 
 // AR 웹캠 활성화 및 스티커 오버레이
 async function startArTryOn(stickerPath) {
-    // 분석 웹캠이 실행 중이면 정지
     if (isRunning) {
         toggleAnalysis();
     }
     
-    // AR 컨테이너 표시
     arContainer.style.display = 'block';
     
-    // 스티커 이미지 설정
     arStickerOverlay.src = stickerPath;
     
-    // 💡 [수정] 현재 스티커 기본 이름 및 길이 정보 저장 (파일명: oval_long_sticker.png 가정)
     const parts = stickerPath.split('/');
-    const fileName = parts[parts.length - 1]; // 파일명 (예: oval_long_sticker.png)
+    const fileName = parts[parts.length - 1]; 
     
-    // 파일명에서 ".png"와 "_sticker"를 제거한 기본 스타일 이름 저장 (예: oval_long)
     currentStickerBaseName = fileName.replace('.png', '').replace('_sticker', ''); 
-    
-    // 길이 정보 저장
     currentStickerLength = currentStickerBaseName.includes('short') ? 'short' : 'long'; 
 
-    // 컬러 버튼 초기화 및 'Original' 활성화
     document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById("color-original-btn").classList.add('active');
     
-    // 웹캠 스트림 설정
     try {
         if (arWebcamStream) {
-            stopArWebcamStream(); // 기존 스트림이 있다면 정지
+            stopArWebcamStream(); 
         }
         
         arWebcamStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 width: 400,
                 height: 300,
-                facingMode: "user" // 전면 카메라 사용
+                facingMode: "user" 
             }
         });
 
         arWebcamVideo.srcObject = arWebcamStream;
         arWebcamVideo.play();
         
-        // 거울 효과를 위해 비디오 플립 (CSS에서 처리)
         arWebcamVideo.style.transform = 'scaleX(-1)';
         
-        // ⭐ 수정 부분: 비디오가 준비되면 AR 루프 시작 ⭐
+        // 비디오가 준비되면 AR 루프 시작
         arWebcamVideo.onloadeddata = () => {
             if (arRequestID) window.cancelAnimationFrame(arRequestID);
             arLoop();
@@ -699,7 +664,6 @@ function stopArWebcamStream() {
 
 // AR Try-On 전체 정지 및 UI 정리
 function stopArTryOn() {
-    // ⭐ 수정 부분: AR 루프 정지 ⭐
     if (arRequestID) window.cancelAnimationFrame(arRequestID);
     arRequestID = null;
 
@@ -716,29 +680,23 @@ function changeStickerColor(colorType) {
         return;
     }
     
-    // 버튼 클래스 업데이트
     document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.color-btn[data-color="${colorType}"]`).classList.add('active');
 
     let newStickerPath = '';
     
     if (colorType === 'original') {
-        // 기본 이미지 경로: images/oval_long_sticker.png
-        // (기존 스티커 이미지는 여전히 "_sticker" 접미사를 가지고 있다고 가정)
         newStickerPath = `images/${currentStickerBaseName}_sticker.png`; 
     } else {
-        // 컬러 이미지 경로: images/oval_long_warm.png (고객님 규칙 반영)
-        // currentStickerBaseName (예: oval_long) + colorType (예: warm)
         newStickerPath = `images/${currentStickerBaseName}_${colorType}.png`;
     }
     
-    // 이미지 스티커 소스 업데이트
     arStickerOverlay.src = newStickerPath;
 }
 
 
 // ===============================================
-// 10. AR Screenshot Logic (기존 기능)
+// 10. AR Screenshot Logic 
 // ===============================================
 
 // 다운로드 처리 도우미 함수
@@ -750,7 +708,6 @@ function triggerDownload(canvas) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    // canvas.remove(); // 캔버스 제거는 호출 측에서 처리
 }
 
 function captureArScreenshot() {
@@ -759,9 +716,7 @@ function captureArScreenshot() {
         return;
     }
 
-    // 1. 캔버스 생성 및 크기 설정
     const canvas = document.createElement('canvas');
-    // 비디오의 실제 해상도(400x300)를 사용
     const videoWidth = arWebcamVideo.videoWidth; 
     const videoHeight = arWebcamVideo.videoHeight;
     canvas.width = videoWidth;
@@ -769,34 +724,41 @@ function captureArScreenshot() {
     const ctx = canvas.getContext('2d');
 
     // 2. 웹캠 비디오 그리기 (거울 효과 적용)
-    // 웹캠 비디오는 CSS transform: scaleX(-1)로 좌우 반전되어 있으므로, 캔버스에도 동일하게 적용해야 합니다.
-    ctx.save(); // 현재 캔버스 상태 저장
-    ctx.translate(videoWidth, 0); // x축 이동
-    ctx.scale(-1, 1); // 좌우 반전
+    ctx.save(); 
+    ctx.translate(videoWidth, 0); 
+    ctx.scale(-1, 1); 
     ctx.drawImage(arWebcamVideo, 0, 0, videoWidth, videoHeight);
-    ctx.restore(); // 변환 상태 초기화
+    ctx.restore(); 
 
     // 3. 스티커 이미지 그리기
-    if (arStickerOverlay.style.display !== 'none' && arStickerOverlay.src) {
+    if (arStickerOverlay.style.display === 'block' && arStickerOverlay.src) {
         const stickerImg = new Image();
-        stickerImg.crossOrigin = "anonymous"; // CORS 문제 방지
+        stickerImg.crossOrigin = "anonymous"; 
         
         stickerImg.onload = () => {
-            
-            // ⭐ AR 스티커의 현재 위치와 크기를 가져와서 캔버스에 그립니다. ⭐
-            // AR 루프에서 설정한 스티커의 CSS 속성을 캔버스 좌표로 변환하여 사용합니다.
-            const stickerLeft = parseFloat(arStickerOverlay.style.left) || 0;
-            const stickerTop = parseFloat(arStickerOverlay.style.top) || 0;
-            const stickerDrawWidth = parseFloat(arStickerOverlay.style.width) || videoWidth;
-            const stickerDrawHeight = parseFloat(arStickerOverlay.style.height) || videoHeight;
+            // ⭐ AR 스티커의 현재 위치와 크기를 가져옵니다. ⭐
+            // getComputedStyle을 사용하여 CSS에 의해 실제로 적용된 값을 가져옵니다.
+            const computedStyle = window.getComputedStyle(arStickerOverlay);
+            const stickerLeft = parseFloat(computedStyle.left);
+            const stickerTop = parseFloat(computedStyle.top);
+            const stickerDrawWidth = parseFloat(computedStyle.width);
+            const stickerDrawHeight = parseFloat(computedStyle.height);
 
-            // 스티커도 좌우 반전되어 표시되므로, 캔버스에도 동일하게 변환 후 그려야 합니다.
+            if (isNaN(stickerLeft) || isNaN(stickerTop) || isNaN(stickerDrawWidth) || isNaN(stickerDrawHeight)) {
+                console.error("Sticker drawing error: Computed style is invalid.");
+                // 스티커 없이 비디오만 저장
+                triggerDownload(canvas); 
+                canvas.remove();
+                return;
+            }
+
+            // 스티커도 좌우 반전되어 표시되므로, 캔버스에 그릴 때도 변환을 적용합니다.
             ctx.save(); 
-            ctx.translate(stickerLeft + stickerDrawWidth, stickerTop); // 스티커 영역의 오른쪽 상단으로 이동
+            // 변환 원점을 스티커 영역의 오른쪽 상단으로 이동
+            ctx.translate(stickerLeft + stickerDrawWidth, stickerTop); 
             ctx.scale(-1, 1); // 좌우 반전
             
-            // 그릴 때의 좌표는 변환된 좌표계에서 (0, 0)을 기준으로 합니다.
-            // 따라서 이미 이동했으므로 x, y 시작점은 (0, 0)이 됩니다.
+            // 변환된 좌표계에서 (0, 0)을 기준으로 스티커를 그립니다.
             ctx.drawImage(stickerImg, 0, 0, stickerDrawWidth, stickerDrawHeight);
             
             ctx.restore(); 
@@ -804,6 +766,11 @@ function captureArScreenshot() {
             // 4. 다운로드 실행
             triggerDownload(canvas);
             canvas.remove();
+        };
+        stickerImg.onerror = () => {
+             console.error("Sticker image failed to load for screenshot.");
+             triggerDownload(canvas); 
+             canvas.remove();
         };
         stickerImg.src = arStickerOverlay.src;
     } else {
