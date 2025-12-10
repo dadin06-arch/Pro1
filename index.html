@@ -18,80 +18,72 @@
 </head>
 <body>
     <header>
-        <div class="header-content-wrapper"> 
-            <div class="header-icons-left">
-                <img src="images/icon_cosmetic.png" alt="Cosmetic Icon" class="header-icon">
-                <img src="images/icon_hair.png" alt="Palette Icon" class="header-icon">
-            </div>
-            <div class="header-text-group">
-                <h1>AI StyleMate</h1>
-                <p class="subtitle">Hair Style and Color Recommendation based on Face Type and Personal Tone</p>
-            </div>
-            <div class="header-icons-right">
-                <img src="images/icon_color.png" alt="Comb Icon" class="header-icon">
-                <img src="images/icon_organic.png" alt="Organic Icon" class="header-icon">
-            </div>
+        <div class="header-content">
+            <h1>AI StyleMate</h1>
+            <p>Your ultimate guide to the perfect look.</p>
         </div>
     </header>
 
-    <div id="main-content">
-        <section id="input-section" class="card fade-in">
-            <h2><i class="fas fa-camera"></i> Input Source</h2>
+    <div class="container">
+        <section id="model-selection">
+            <h2>1. Select Analysis Model</h2>
+            <div class="button-group">
+                <button id="model1-btn" class="btn active" data-model="1">Face Type Analysis</button>
+                <button id="model2-btn" class="btn" data-model="2">Personal Tone Analysis</button>
+            </div>
+            <div id="current-model-info" class="model-info">Active Model: **Face Type Analysis**</div>
+        </section>
+
+        <hr>
+
+        <section id="main-analysis">
+            <h2>2. Run Analysis</h2>
             
-            <div class="mode-select-group">
-                <button id="mode-webcam" class="btn mode-btn active">Webcam Mode</button>
-                <button id="mode-upload" class="btn mode-btn">Image Upload Mode</button>
+            <div class="mode-selection button-group">
+                <button id="mode-webcam" class="btn active">Live Webcam</button>
+                <button id="mode-upload" class="btn">Image Upload</button>
             </div>
 
             <div id="webcam-container">
                 <p id="initial-message">Click "Start Analysis" to load webcam.</p>
             </div>
-            
-            <div id="webcam-controls">
-                <button id="start-button" class="btn primary-btn">🚀 Start Analysis</button>
+
+            <div id="webcam-controls" class="control-group">
+                <button id="start-button" class="btn primary-btn">▶️ Start Analysis</button>
             </div>
 
-            <div id="upload-controls" style="display: none;">
-                <input type="file" id="image-upload" accept="image/*" class="file-input">
+            <div id="upload-controls" class="control-group" style="display: none;">
+                <input type="file" id="image-upload" accept="image/*">
                 <button id="process-image-btn" class="btn primary-btn" disabled>Process Uploaded Image</button>
             </div>
             
-            <div id="current-model-info" class="info-text">Active Model: **Face Type Analysis**</div>
-            <div class="button-group">
-                <button id="model1-btn" class="btn model-select-btn active">Face Type Analysis (Model 1)</button>
-                <button id="model2-btn" class="btn model-select-btn">Personal Tone Analysis (Model 2)</button>
+            <div id="label-container" class="analysis-output">
+                Waiting for analysis...
             </div>
-            
-            <div id="label-container" class="result-display">Waiting for analysis...</div>
-
         </section>
 
-        <section id="analysis-section" class="card fade-in">
-            <h2><i class="fas fa-magic"></i> Recommendation Guide</h2>
+        <hr>
+
+        <section id="recommendation-section">
+            <h2>3. Recommendation & Try-On</h2>
             
-            <div id="style-selection-controls" style="display: none;">
-                <h3>Hair Style Guide</h3>
-                <div class="face-type-buttons">
-                    <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
-                    <button class="btn face-select-btn" data-facetype="Round">Round</button>
-                    <button class="btn face-select-btn" data-facetype="Square">Square</button>
-                    <button class="btn face-select-btn" data-facetype="Heart">Heart</button>
-                    <button class="btn face-select-btn" data-facetype="Oblong">Oblong</button>
-                </div>
+            <div id="style-selection-controls" class="selection-controls button-group" style="display: none;">
+                <button class="btn face-select-btn" data-facetype="Oval">Oval</button>
+                <button class="btn face-select-btn" data-facetype="Round">Round</button>
+                <button class="btn face-select-btn" data-facetype="Square">Square</button>
+                <button class="btn face-select-btn" data-facetype="Heart">Heart</button>
+                <button class="btn face-select-btn" data-facetype="Oblong">Oblong</button>
             </div>
 
-            <div id="tone-selection-controls" style="display: none;">
-                <h3>Personal Tone Guide</h3>
-                <div class="tone-type-buttons">
-                    <button class="btn tone-select-btn" data-tonetype="Warm">Warm Tone</button>
-                    <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
-                </div>
+            <div id="tone-selection-controls" class="selection-controls button-group" style="display: none;">
+                <button class="btn tone-select-btn" data-tonetype="Cool">Cool Tone</button>
+                <button class="btn tone-select-btn" data-tonetype="Warm">Warm Tone</button>
             </div>
-
-            <div id="recommendation-output" class="result-detail">
+            
+            <div id="recommendation-output" class="recommendation-card">
                 <p>Select a model to begin the analysis or selection.</p>
             </div>
-            
+
             <div id="ar-container" style="display: none;">
                 <h4 class="ar-title"><i class="fas fa-camera-retro"></i> AR Hairstyle Try-On</h4>
                 <p class="ar-subtitle">Adjust your head position to fit the sticker outline.</p>
@@ -99,7 +91,7 @@
                 <div id="ar-view-and-controls-wrapper"> 
                     <div id="ar-webcam-wrapper">
                         <video id="ar-webcam-video" autoplay playsinline></video>
-                        <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker">
+                        <img id="ar-sticker-overlay" src="" alt="Hairstyle Sticker"> 
                     </div>
                     
                     <div id="color-selection-controls" class="button-group vertical-group">
@@ -116,27 +108,6 @@
         </section>
     </div>
 
-    <div id="consent-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h3 class="modal-title">초상권 및 개인정보 보호 동의</h3>
-            <p class="modal-body">
-                본 서비스는 사용자의 얼굴 이미지를 AI 분석에 활용하여 얼굴형 및 퍼스널 컬러를 추천합니다.
-                <br>
-                **1. 이미지 사용 목적:** AI 모델(TensorFlow.js)을 통한 얼굴 특징 분석.
-                <br>
-                **2. 이미지 저장:** 분석에 사용된 이미지는 **서버에 전송되거나 저장되지 않습니다.** 모든 분석은 사용자 기기(브라우저) 내에서만 처리됩니다.
-                <br>
-                **3. 동의 거부 시:** 동의하지 않으시면 분석 기능을 이용할 수 없습니다.
-                <br><br>
-                분석을 시작하시려면 위 내용에 **동의**해 주십시오.
-            </p>
-            <div class="modal-buttons">
-                <button id="consent-agree-btn" class="btn primary-btn">✅ 동의 및 분석 시작</button>
-                <button id="consent-cancel-btn" class="btn secondary-btn">❌ 취소</button>
-            </div>
-        </div>
-    </div>
     <script src="script.js"></script>
 </body>
 </html>
